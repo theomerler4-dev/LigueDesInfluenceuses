@@ -7,8 +7,8 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #0d0d0d;
-      --card: #1a1a1a;
+      --bg: #0b0b0b;
+      --card: #161616;
       --pink: #ff2d78;
       --text: #ffffff;
       --muted: #999;
@@ -38,14 +38,14 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 4px 20px rgba(255, 45, 120, 0.25);
+      box-shadow: 0 4px 25px rgba(255, 45, 120, 0.3);
     }
 
     .nav {
       display: flex;
       overflow-x: auto;
-      background: #141414;
-      border-bottom: 1px solid #252525;
+      background: #121212;
+      border-bottom: 1px solid #222;
       scrollbar-width: none;
       padding: 0 4px;
     }
@@ -77,7 +77,7 @@
     .content {
       height: calc(100vh - 102px);
       overflow-y: auto;
-      padding: 14px 12px 40px;
+      padding: 16px 12px 90px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -92,122 +92,140 @@
     .section-title {
       font-size: 16px;
       font-weight: 700;
-      margin: 4px 0 12px;
+      margin: 4px 0 14px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* ===== MATCHS ===== */
-    .match-card {
-      background: var(--card);
-      border-radius: 18px;
-      padding: 15px;
-      margin-bottom: 12px;
+    /* DUEL CARD */
+    .duel-card {
+      background: linear-gradient(145deg, #1a1a1a, #141414);
+      border-radius: 24px;
+      padding: 20px 16px 16px;
+      margin-bottom: 18px;
       border: 1px solid #2a2a2a;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .duel-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--pink), transparent);
     }
 
-    .match-vs {
+    .duel-players {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 13px;
+      margin-bottom: 18px;
     }
 
     .player {
       flex: 1;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
+    .player-photo {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #333;
+      box-shadow: 0 0 0 3px rgba(255,45,120,0.15);
+      margin-bottom: 10px;
+      background: #222;
+    }
+
     .player-name {
       font-weight: 700;
       font-size: 15px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
     .player-votes {
       font-size: 12px;
       color: var(--pink);
     }
 
-    .vs {
-      font-weight: 800;
-      color: #555;
-      font-size: 12px;
-      background: #252525;
-      width: 34px;
-      height: 34px;
+    .vs-circle {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #ff0066, #ff2d78);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 45, 120, 0.4);
     }
 
     .vote-btns {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     .vote-btn {
       flex: 1;
-      padding: 11px 6px;
+      padding: 13px 8px;
       border: none;
-      border-radius: 13px;
+      border-radius: 16px;
       background: #252525;
       color: white;
       font-weight: 600;
-      font-size: 13px;
+      font-size: 14px;
     }
     .vote-btn:active {
       background: var(--pink);
       transform: scale(0.96);
     }
     .vote-btn:disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       pointer-events: none;
     }
 
-    /* ===== CLASSEMENT TABLE ===== */
+    /* CLASSEMENT */
     .table-wrapper {
       overflow-x: auto;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid #2a2a2a;
       background: var(--card);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       min-width: 340px;
     }
-
     th {
-      background: #222;
-      padding: 11px 6px;
+      background: #1f1f1f;
+      padding: 12px 6px;
       text-align: center;
       font-weight: 600;
-      color: #ccc;
+      color: #bbb;
       border-bottom: 1px solid #333;
-      white-space: nowrap;
     }
-
     td {
-      padding: 11px 6px;
+      padding: 12px 6px;
       text-align: center;
       border-bottom: 1px solid #252525;
     }
-
     tr:last-child td { border-bottom: none; }
-
     .name-cell {
       text-align: left !important;
       font-weight: 600;
-      padding-left: 12px !important;
-      white-space: nowrap;
+      padding-left: 14px !important;
     }
-
     .pos {
       font-weight: 800;
       color: var(--pink);
-      width: 32px;
+      width: 34px;
     }
 
     .empty {
@@ -217,10 +235,94 @@
       font-size: 14px;
       line-height: 1.5;
     }
-    .empty-emoji {
-      font-size: 32px;
-      margin-bottom: 8px;
+    .empty-emoji { font-size: 34px; margin-bottom: 8px; }
+
+    /* BOUTON ADMIN */
+    .admin-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff0066, #ff2d78);
+      border: none;
+      color: white;
+      font-size: 28px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(255, 45, 120, 0.5);
+      z-index: 200;
+      display: none;
     }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 300;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal.show { display: flex; }
+
+    .modal-content {
+      background: #1a1a1a;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px 40px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid #333;
+      background: #252525;
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .btn-cancel { background: #333; color: white; }
+    .btn-add { background: linear-gradient(135deg, #ff0066, #ff2d78); color: white; }
   </style>
 </head>
 <body>
@@ -238,21 +340,49 @@
 
   <div class="content" id="content"></div>
 
+  <!-- Bouton Admin -->
+  <button class="admin-btn" id="adminBtn" onclick="openModal()">+</button>
+
+  <!-- Modal Ajout -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-title">➕ Ajouter une participante</div>
+
+      <div class="form-group">
+        <label>Ligue</label>
+        <select id="selectLeague">
+          <option value="0">Ligue 1</option>
+          <option value="1">Ligue 2</option>
+          <option value="2">Ligue 3</option>
+          <option value="3">Ligue 4</option>
+          <option value="4">Ligue 5</option>
+          <option value="5">Ligue Ascension</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" id="inputName" placeholder="Ex: Léa" maxlength="20">
+      </div>
+
+      <div class="form-group">
+        <label>Photo (lien URL)</label>
+        <input type="url" id="inputPhoto" placeholder="https://i.imgur.com/xxxxx.jpg">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-add" onclick="ajouterParticipante()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ================================================
-    //   AJOUTE TES PARTICIPANTES ICI
-    //   Format : { nom: "Prénom", v:0, n:0, d:0, votes:0, total:0 }
-    // ================================================
+    // ========== CONFIG ADMIN ==========
+    const ADMIN_ID = 8994516214;   // ← Ton ID
+
     const defaultData = [
-      {
-        nom: "Ligue 1",
-        emoji: "🏆",
-        participantes: [
-          // Exemple :
-          // { nom: "Léa", v: 0, n: 0, d: 0, votes: 0, total: 0 },
-          // { nom: "Inès", v: 0, n: 0, d: 0, votes: 0, total: 0 },
-        ]
-      },
+      { nom: "Ligue 1", emoji: "🏆", participantes: [] },
       { nom: "Ligue 2", emoji: "🥈", participantes: [] },
       { nom: "Ligue 3", emoji: "🥉", participantes: [] },
       { nom: "Ligue 4", emoji: "⭐", participantes: [] },
@@ -260,20 +390,71 @@
       { nom: "Ligue Ascension", emoji: "🚀", participantes: [] }
     ];
 
-    // Charger les données sauvegardées
     let ligues = JSON.parse(localStorage.getItem('ligueData')) || defaultData;
     let votesFaits = JSON.parse(localStorage.getItem('votesFaits')) || {};
 
-    // Telegram
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
     tg.setHeaderColor('#ff0066');
-    tg.setBackgroundColor('#0d0d0d');
+    tg.setBackgroundColor('#0b0b0b');
+
+    // Vérifier si admin
+    const user = tg.initDataUnsafe?.user;
+    const isAdmin = user && user.id === ADMIN_ID;
+    if (isAdmin) {
+      document.getElementById('adminBtn').style.display = 'block';
+    }
 
     function saveData() {
       localStorage.setItem('ligueData', JSON.stringify(ligues));
       localStorage.setItem('votesFaits', JSON.stringify(votesFaits));
+    }
+
+    function getPhoto(p) {
+      return p.photo && p.photo.trim() !== "" 
+        ? p.photo 
+        : "https://via.placeholder.com/200x200/222/666?text=?";
+    }
+
+    function openModal() {
+      document.getElementById('modal').classList.add('show');
+    }
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+      document.getElementById('inputName').value = '';
+      document.getElementById('inputPhoto').value = '';
+    }
+
+    function ajouterParticipante() {
+      const leagueIndex = parseInt(document.getElementById('selectLeague').value);
+      const nom = document.getElementById('inputName').value.trim();
+      const photo = document.getElementById('inputPhoto').value.trim();
+
+      if (!nom) {
+        tg.showAlert("Tu dois mettre un nom !");
+        return;
+      }
+
+      ligues[leagueIndex].participantes.push({
+        nom: nom,
+        photo: photo,
+        v: 0,
+        n: 0,
+        d: 0,
+        votes: 0,
+        total: 0
+      });
+
+      saveData();
+      closeModal();
+      render();
+
+      tg.showPopup({
+        title: "Ajoutée ✅",
+        message: `${nom} a été ajoutée dans ${ligues[leagueIndex].nom}`,
+        buttons: [{ type: "ok" }]
+      });
     }
 
     function render() {
@@ -285,17 +466,16 @@
         page.className = `page ${index === 0 ? 'active' : ''}`;
         page.id = `page-${index}`;
 
-        // ----- MATCHS -----
+        // MATCHS
         let html = `<div class="section-title">${ligue.emoji} Matchs du jour</div>`;
 
         if (ligue.participantes.length < 2) {
           html += `
             <div class="empty">
               <div class="empty-emoji">😴</div>
-              Ajoute au moins 2 participantes<br>pour générer des matchs
+              Ajoute au moins 2 participantes<br>pour générer des duels
             </div>`;
         } else {
-          // Génération simple des duels (1vs2, 3vs4...)
           for (let i = 0; i < ligue.participantes.length - 1; i += 2) {
             const p1 = ligue.participantes[i];
             const p2 = ligue.participantes[i + 1];
@@ -303,79 +483,51 @@
             const dejaVote = votesFaits[matchId];
 
             html += `
-              <div class="match-card">
-                <div class="match-vs">
+              <div class="duel-card">
+                <div class="duel-players">
                   <div class="player">
+                    <img class="player-photo" src="${getPhoto(p1)}" alt="${p1.nom}">
                     <div class="player-name">${p1.nom}</div>
                     <div class="player-votes">${p1.votes} votes</div>
                   </div>
-                  <div class="vs">VS</div>
+                  <div class="vs-circle">VS</div>
                   <div class="player">
+                    <img class="player-photo" src="${getPhoto(p2)}" alt="${p2.nom}">
                     <div class="player-name">${p2.nom}</div>
                     <div class="player-votes">${p2.votes} votes</div>
                   </div>
                 </div>
                 <div class="vote-btns">
-                  <button class="vote-btn" 
-                    ${dejaVote ? 'disabled' : ''} 
-                    onclick="voter(${index}, ${i}, '${matchId}')">
-                    ❤️ ${p1.nom}
-                  </button>
-                  <button class="vote-btn" 
-                    ${dejaVote ? 'disabled' : ''} 
-                    onclick="voter(${index}, ${i+1}, '${matchId}')">
-                    ❤️ ${p2.nom}
-                  </button>
+                  <button class="vote-btn" ${dejaVote ? 'disabled' : ''} onclick="voter(${index}, ${i}, '${matchId}')">❤️ ${p1.nom}</button>
+                  <button class="vote-btn" ${dejaVote ? 'disabled' : ''} onclick="voter(${index}, ${i+1}, '${matchId}')">❤️ ${p2.nom}</button>
                 </div>
-              </div>
-            `;
+              </div>`;
           }
         }
 
-        // ----- CLASSEMENT -----
-        html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+        // CLASSEMENT
+        html += `<div class="section-title" style="margin-top:28px">📊 Classement</div>`;
 
         if (ligue.participantes.length === 0) {
-          html += `
-            <div class="empty">
-              <div class="empty-emoji">👤</div>
-              Aucune participante
-            </div>`;
+          html += `<div class="empty"><div class="empty-emoji">👤</div>Aucune participante</div>`;
         } else {
           const sorted = [...ligue.participantes].sort((a, b) => b.total - a.total || b.votes - a.votes);
-
-          html += `
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th style="text-align:left;padding-left:12px">Joueuse</th>
-                    <th>V</th>
-                    <th>N</th>
-                    <th>D</th>
-                    <th>Votes</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
+          html += `<div class="table-wrapper"><table>
+            <thead><tr>
+              <th>#</th>
+              <th style="text-align:left;padding-left:14px">Joueuse</th>
+              <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
+            </tr></thead><tbody>`;
 
           sorted.forEach((p, i) => {
             const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
-            html += `
-              <tr>
-                <td class="pos">${medal}</td>
-                <td class="name-cell">${p.nom}</td>
-                <td>${p.v}</td>
-                <td>${p.n}</td>
-                <td>${p.d}</td>
-                <td>${p.votes}</td>
-                <td><b>${p.total}</b></td>
-              </tr>
-            `;
+            html += `<tr>
+              <td class="pos">${medal}</td>
+              <td class="name-cell">${p.nom}</td>
+              <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
+              <td>${p.votes}</td><td><b>${p.total}</b></td>
+            </tr>`;
           });
-
           html += `</tbody></table></div>`;
         }
 
@@ -383,7 +535,7 @@
         content.appendChild(page);
       });
 
-      // Rebind navigation
+      // Navigation
       document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.onclick = () => {
           document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -399,29 +551,4 @@
 
       const player = ligues[leagueIndex].participantes[playerIndex];
       const opponentIndex = playerIndex % 2 === 0 ? playerIndex + 1 : playerIndex - 1;
-      const opponent = ligues[leagueIndex].participantes[opponentIndex];
-
-      // Mise à jour stats
-      player.votes += 1;
-      player.v += 1;
-      player.total += 3;          // 3 points pour une victoire
-
-      opponent.d += 1;
-      // opponent.total reste pareil (ou -1 si tu veux)
-
-      votesFaits[matchId] = true;
-      saveData();
-      render();
-
-      tg.showPopup({
-        title: "Vote enregistré ❤️",
-        message: `Tu as voté pour ${player.nom} !\n+3 points`,
-        buttons: [{ type: "ok" }]
-      });
-    }
-
-    // Premier rendu
-    render();
-  </script>
-</body>
-</html>
+     
