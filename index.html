@@ -551,4 +551,25 @@
 
       const player = ligues[leagueIndex].participantes[playerIndex];
       const opponentIndex = playerIndex % 2 === 0 ? playerIndex + 1 : playerIndex - 1;
-     
+      const opponent = ligues[leagueIndex].participantes[opponentIndex];
+
+      player.votes += 1;
+      player.v += 1;
+      player.total += 3;
+      opponent.d += 1;
+
+      votesFaits[matchId] = true;
+      saveData();
+      render();
+
+      tg.showPopup({
+        title: "Vote enregistré ❤️",
+        message: `Tu as voté pour ${player.nom} !\n+3 points`,
+        buttons: [{ type: "ok" }]
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
