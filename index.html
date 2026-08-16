@@ -78,6 +78,17 @@
       padding: 18px 14px 14px;
       margin-bottom: 16px;
       border: 1px solid #2a2a2a;
+      position: relative;
+    }
+    .time-left {
+      text-align: center;
+      font-size: 13px;
+      color: #ff2d78;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .time-left.expired {
+      color: #e74c3c;
     }
     .duel-players {
       display: flex;
@@ -125,7 +136,10 @@
       font-weight: 600;
       font-size: 13px;
     }
-    .vote-btn:disabled { opacity: 0.4; }
+    .vote-btn:disabled {
+      opacity: 0.4;
+      background: #1a1a1a;
+    }
 
     .table-wrapper {
       overflow-x: auto;
@@ -285,7 +299,7 @@
     <button class="admin-btn btn-del" onclick="openDeleteModal()">🗑️</button>
   </div>
 
-  <!-- Modal Ajouter Participante -->
+  <!-- Modal Ajouter -->
   <div class="modal" id="addModal">
     <div class="modal-content">
       <div class="modal-title">➕ Ajouter une participante</div>
@@ -315,7 +329,7 @@
     </div>
   </div>
 
-  <!-- Modal Supprimer Participante -->
+  <!-- Modal Supprimer -->
   <div class="modal" id="deleteModal">
     <div class="modal-content">
       <div class="modal-title">🗑️ Supprimer une participante</div>
@@ -330,11 +344,10 @@
     </div>
   </div>
 
-  <!-- Modal Créer Matchs -->
+  <!-- Modal Matchs -->
   <div class="modal" id="matchModal">
     <div class="modal-content">
       <div class="modal-title">⚔️ Créer un match</div>
-
       <div class="form-group">
         <label>Ligue</label>
         <select id="matchLeague" onchange="updateMatchSelects()">
@@ -346,24 +359,20 @@
           <option value="5">Ligue Ascension</option>
         </select>
       </div>
-
       <div class="form-group">
         <label>Participante 1</label>
         <select id="matchP1"></select>
       </div>
-
       <div class="form-group">
         <label>Participante 2</label>
         <select id="matchP2"></select>
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModals()">Fermer</button>
         <button class="btn btn-confirm" onclick="ajouterMatch()">Ajouter le match</button>
       </div>
-
       <div style="margin-top:20px;">
-        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Matchs actuels de la ligue :</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Matchs actuels :</div>
         <div id="currentMatchesList"></div>
       </div>
     </div>
@@ -371,6 +380,7 @@
 
   <script>
     const ADMIN_ID = 8994516214;
+    const DUREE_MATCH = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
 
     const defaultData = {
       ligues: [
@@ -383,8 +393,8 @@
       ]
     };
 
-    let data = JSON.parse(localStorage.getItem('ligueDataV3')) || defaultData;
-    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV3')) || {};
+    let data = JSON.parse(localStorage.getItem('ligueDataV4')) || defaultData;
+    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV4')) || {};
 
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -400,13 +410,25 @@
     }, 400);
 
     function save() {
-      localStorage.setItem('ligueDataV3', JSON.stringify(data));
-      localStorage.setItem('votesFaitsV3', JSON.stringify(votesFaits));
+      localStorage.setItem('ligueDataV4', JSON.stringify(data));
+      localStorage.setItem('votesFaitsV4', JSON.stringify(votesFaits));
     }
 
     function getPhoto(p) {
       if (p.photo && p.photo.startsWith('http')) return p.photo;
       return "https://ui-avatars.com/api/?name=" + encodeURIComponent(p.nom) + "&background=333&color=fff&size=200";
+    }
+
+    function getTimeLeft(createdAt) {
+      const now = Date.now();
+      const end = createdAt + DUREE_MATCH;
+      const remaining = end - now;
+
+      if (remaining <= 0) return { text: "Match terminé", expired: true };
+
+      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      return { text: `Il reste ${hours}h ${minutes}min`, expired: false };
     }
 
     function openAddModal() {
@@ -451,17 +473,20 @@
         p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
       });
 
-      // Afficher les matchs actuels
       const list = document.getElementById('currentMatchesList');
       list.innerHTML = '';
       const matchs = data.ligues[lIndex].matchs || [];
       if (matchs.length === 0) {
-        list.innerHTML = '<div style="color:#666;font-size:13px;">Aucun match pour le moment</div>';
+        list.innerHTML = '<div style="color:#666;font-size:13px;">Aucun match</div>';
       } else {
         matchs.forEach((m, i) => {
+          const time = getTimeLeft(m.createdAt);
           list.innerHTML += `
             <div class="match-list-item">
-              <span>${m.p1} vs ${m.p2}</span>
+              <div>
+                <div>${m.p1} vs ${m.p2}</div>
+                <div style="font-size:12px;color:${time.expired ? '#e74c3c' : '#aaa'}">${time.text}</div>
+              </div>
               <button onclick="supprimerMatch(${lIndex}, ${i})">Suppr</button>
             </div>`;
         });
@@ -477,11 +502,15 @@
       if (p1 === p2) return tg.showAlert("Choisis deux participantes différentes");
 
       if (!data.ligues[lIndex].matchs) data.ligues[lIndex].matchs = [];
-      data.ligues[lIndex].matchs.push({ p1, p2 });
+      data.ligues[lIndex].matchs.push({
+        p1,
+        p2,
+        createdAt: Date.now()
+      });
       save();
       updateMatchSelects();
       render();
-      tg.showPopup({ title: "Match ajouté ⚔️", message: `${p1} vs ${p2}`, buttons: [{type:"ok"}] });
+      tg.showPopup({ title: "Match ajouté ⚔️", message: `${p1} vs ${p2}\nDurée : 24h`, buttons: [{type:"ok"}] });
     }
 
     function supprimerMatch(lIndex, mIndex) {
@@ -538,11 +567,14 @@
             const p2 = ligue.participantes.find(p => p.nom === match.p2);
             if (!p1 || !p2) return;
 
-            const matchId = `${index}-${p1.nom}-${p2.nom}`;
+            const matchId = `${index}-${p1.nom}-${p2.nom}-${match.createdAt}`;
+            const time = getTimeLeft(match.createdAt);
             const deja = votesFaits[matchId];
+            const canVote = !time.expired && !deja;
 
             html += `
               <div class="duel-card">
+                <div class="time-left ${time.expired ? 'expired' : ''}">${time.text}</div>
                 <div class="duel-players">
                   <div class="player">
                     <img class="player-photo" src="${getPhoto(p1)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p1.nom)}&background=333&color=fff&size=200'">
@@ -557,8 +589,8 @@
                   </div>
                 </div>
                 <div class="vote-btns">
-                  <button class="vote-btn" ${deja ? 'disabled' : ''} onclick="voter(${index}, '${p1.nom}', '${matchId}')">❤️ ${p1.nom}</button>
-                  <button class="vote-btn" ${deja ? 'disabled' : ''} onclick="voter(${index}, '${p2.nom}', '${matchId}')">❤️ ${p2.nom}</button>
+                  <button class="vote-btn" ${!canVote ? 'disabled' : ''} onclick="voter(${index}, '${p1.nom}', '${matchId}', ${match.createdAt})">❤️ ${p1.nom}</button>
+                  <button class="vote-btn" ${!canVote ? 'disabled' : ''} onclick="voter(${index}, '${p2.nom}', '${matchId}', ${match.createdAt})">❤️ ${p2.nom}</button>
                 </div>
               </div>`;
           });
@@ -599,11 +631,18 @@
       });
     }
 
-    function voter(lIndex, nom, matchId) {
-      if (votesFaits[matchId]) return;
+    function voter(lIndex, nom, matchId, createdAt) {
+      const time = getTimeLeft(createdAt);
+      if (time.expired) {
+        return tg.showAlert("Ce match est terminé (24h écoulées)");
+      }
+      if (votesFaits[matchId]) {
+        return tg.showAlert("Tu as déjà voté pour ce match");
+      }
+
       const ligue = data.ligues[lIndex];
       const player = ligue.participantes.find(p => p.nom === nom);
-      const match = ligue.matchs.find(m => m.p1 === nom || m.p2 === nom);
+      const match = ligue.matchs.find(m => (m.p1 === nom || m.p2 === nom) && m.createdAt === createdAt);
       const opponentNom = match.p1 === nom ? match.p2 : match.p1;
       const opponent = ligue.participantes.find(p => p.nom === opponentNom);
 
@@ -617,6 +656,9 @@
       render();
       tg.showPopup({ title: "Vote enregistré ❤️", message: `Tu as voté pour ${nom}`, buttons: [{type:"ok"}] });
     }
+
+    // Mettre à jour le temps restant toutes les minutes
+    setInterval(render, 60000);
 
     render();
   </script>
