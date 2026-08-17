@@ -222,6 +222,7 @@
     const ADMIN_ID = 8994516214;
     const DUREE_MATCH = 24 * 60 * 60 * 1000;
 
+    // ========== 20 PARTICIPANTES EXACTES EN LIGUE 1 ==========
     const defaultData = {
       ligues: [
         { nom:"Ligue 1", emoji:"🏆", participantes:[
@@ -309,8 +310,9 @@
       ]
     };
 
-    let data = JSON.parse(localStorage.getItem('ligueDataV5')) || defaultData;
-    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV5')) || {};
+    // NOUVELLE CLÉ → force le chargement des 20 participantes
+    let data = JSON.parse(localStorage.getItem('ligueDataV6')) || defaultData;
+    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV6')) || {};
 
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
@@ -331,8 +333,8 @@
     setInterval(updateOnlineCount, 12000);
 
     function save() {
-      localStorage.setItem('ligueDataV5', JSON.stringify(data));
-      localStorage.setItem('votesFaitsV5', JSON.stringify(votesFaits));
+      localStorage.setItem('ligueDataV6', JSON.stringify(data));
+      localStorage.setItem('votesFaitsV6', JSON.stringify(votesFaits));
     }
 
     function getPhoto(p) {
@@ -525,7 +527,7 @@
           });
         }
 
-        // ========== CLASSEMENT ==========
+        // CLASSEMENT
         html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
         if (!ligue.participantes.length) {
           html += `<div class="empty">Aucune participante</div>`;
@@ -552,9 +554,8 @@
               nameClass += " promo";
               extra = " ⬆️";
             }
-            // VERT CLAIR + ⚡
+            // VERT CLAIR + ⚡ (plus de 4e en Ligue 1)
             else if (
-              (index === 0 && pos === 4) ||
               ([1,2,3].includes(index) && pos === 4) ||
               (index === 4 && pos === 4) ||
               (index === 5 && pos === 6)
@@ -563,7 +564,7 @@
               extra = " ⚡";
             }
 
-            // ROUGE FORT (18-19-20 pour Ligue 1-4 / 16-20 pour Ligue 5)
+            // ROUGE FORT
             if (
               ([0,1,2,3].includes(index) && pos > total - 3) ||
               (index === 4 && pos > total - 5)
@@ -571,7 +572,7 @@
               nameClass += " releg";
               extra = " ⬇️";
             }
-            // ROUGE CLAIR + ⚡ (uniquement la 17e pour Ligue 1-4 / 15e pour Ligue 5)
+            // ROUGE CLAIR + ⚡ (uniquement 17e en Ligue 1-4)
             else if (
               ([0,1,2,3].includes(index) && pos === 17) ||
               (index === 4 && pos === 15)
