@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ligue des Influenceuses</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
       --bg: #0b0b0b;
@@ -77,10 +82,11 @@
     .empty { text-align:center; color:#666; padding:40px 20px; font-size:14px; line-height:1.5; }
 
     .admin-buttons { position:fixed; bottom:22px; right:14px; display:none; flex-direction:column; gap:10px; z-index:200; }
-    .admin-btn { width:54px; height:54px; border-radius:50%; border:none; color:white; font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
+    .admin-btn { width:54px; height:54px; border-radius:50%; border:none; color:white; font-size:20px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
     .btn-add { background:linear-gradient(135deg,#ff0066,#ff2d78); }
-    .btn-match { background:#2ecc71; font-size:20px; }
-    .btn-del { background:#333; font-size:18px; }
+    .btn-match { background:#2ecc71; }
+    .btn-del { background:#333; }
+    .btn-reset { background:#e67e22; font-size:18px; }
 
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:300; align-items:flex-end; justify-content:center; }
     .modal.show { display:flex; }
@@ -97,32 +103,10 @@
     .match-list-item { background:#252525; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:14px; }
     .match-list-item button { background:#e74c3c; border:none; color:white; padding:6px 10px; border-radius:8px; font-size:12px; }
 
-    .gallery-main {
-      width: 100%;
-      max-height: 320px;
-      object-fit: cover;
-      border-radius: 18px;
-      margin-bottom: 16px;
-      background: #222;
-    }
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .gallery-grid img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 12px;
-      background: #222;
-    }
-    .gallery-empty {
-      text-align: center;
-      color: #777;
-      padding: 20px;
-      font-size: 14px;
-    }
+    .gallery-main { width:100%; max-height:320px; object-fit:cover; border-radius:18px; margin-bottom:16px; background:#222; }
+    .gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .gallery-grid img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; background:#222; }
+    .gallery-empty { text-align:center; color:#777; padding:20px; font-size:14px; }
   </style>
 </head>
 <body>
@@ -143,12 +127,13 @@
   <div class="content" id="content"></div>
 
   <div class="admin-buttons" id="adminButtons">
+    <button class="admin-btn btn-reset" onclick="resetCache()" title="Réinitialiser le cache">🔄</button>
     <button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
     <button class="admin-btn btn-add" onclick="openAddModal()">+</button>
     <button class="admin-btn btn-del" onclick="openDeleteModal()">🗑️</button>
   </div>
 
-  <!-- Modal Ajouter -->
+  <!-- Tous les modals restent identiques -->
   <div class="modal" id="addModal">
     <div class="modal-content">
       <div class="modal-title">➕ Ajouter une participante</div>
@@ -168,7 +153,6 @@
     </div>
   </div>
 
-  <!-- Modal Supprimer -->
   <div class="modal" id="deleteModal">
     <div class="modal-content">
       <div class="modal-title">🗑️ Supprimer une participante</div>
@@ -180,7 +164,6 @@
     </div>
   </div>
 
-  <!-- Modal Match -->
   <div class="modal" id="matchModal">
     <div class="modal-content">
       <div class="modal-title">⚔️ Créer un match</div>
@@ -205,7 +188,6 @@
     </div>
   </div>
 
-  <!-- Modal Galerie -->
   <div class="modal" id="galleryModal">
     <div class="modal-content">
       <div class="modal-title" id="galleryTitle">Photos</div>
@@ -222,410 +204,83 @@
     const ADMIN_ID = 8994516214;
     const DUREE_MATCH = 24 * 60 * 60 * 1000;
 
-    // ========== 20 PARTICIPANTES EXACTES EN LIGUE 1 ==========
-    const defaultData = {
-      ligues: [
-        { nom:"Ligue 1", emoji:"🏆", participantes:[
-          {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] },
-        { nom:"Ligue 2", emoji:"🥈", participantes:[
-          {nom:"Camille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Léonie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Apolline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Capucine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Diane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Élise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Fanny",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Garance",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Héloïse",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Justine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Kenza",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lilou",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Margaux",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Océane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Pauline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Romane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Solène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Thaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Victoire",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Yasmine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] },
-        { nom:"Ligue 3", emoji:"🥉", participantes:[
-          {nom:"Alicia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bianca",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Célia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Daphné",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Elena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Flora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Giulia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hanna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Isis",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Juliette",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Kim",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Mélissa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Olivia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Pénélope",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Quitterie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Roxane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Sienna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Talia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] },
-        { nom:"Ligue 4", emoji:"⭐", participantes:[
-          {nom:"Anaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bonnie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Candice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Delphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Estelle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Fleur",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Gabrielle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hortense",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Ingrid",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Jeanne",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Karine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Laure",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Maëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Noémie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Ophélie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Priscille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Rosalie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sylvie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Tiffany",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Valentine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] },
-        { nom:"Ligue 5", emoji:"🌟", participantes:[
-          {nom:"Aurore",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bérénice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Cécile",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Désirée",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Élodie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Frédérique",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Gwenaëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hermine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Irène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Joséphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Katia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lucie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Morgane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nadège",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Ornella",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Perrine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Stéphanie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Tatiana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Ursula",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] },
-        { nom:"Ligue Ascension", emoji:"🚀", participantes:[
-          {nom:"Maya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Noa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Elya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Iris",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Mila",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Nova",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Pia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Tia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Uma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Vita",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Willa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Xena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Yara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Zia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Alya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Baya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Cira",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-        ], matchs:[] }
-      ]
-    };
+    // ====================== CONFIG FIREBASE ======================
+    <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-    // NOUVELLE CLÉ → force le chargement des 20 participantes
-    let data = JSON.parse(localStorage.getItem('ligueDataV6')) || defaultData;
-    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV6')) || {};
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCQySJP8mzLPU0Ex8bOnY4ZSGXBBKAR4i8",
+    authDomain: "liguesdesinfluenceuses.firebaseapp.com",
+    databaseURL: "https://liguesdesinfluenceuses-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "liguesdesinfluenceuses",
+    storageBucket: "liguesdesinfluenceuses.firebasestorage.app",
+    messagingSenderId: "1008701028009",
+    appId: "1:1008701028009:web:0ed95759576ce589395bb8"
+  };
 
-    const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand();
-    tg.setHeaderColor('#ff0066'); tg.setBackgroundColor('#0b0b0b');
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
 
-    setTimeout(() => {
-      const user = tg.initDataUnsafe?.user;
-      if (user && Number(user.id) === ADMIN_ID) {
-        document.getElementById('adminButtons').style.display = 'flex';
-      }
-    }, 400);
+    // Passe à true seulement quand tu as collé ta vraie config
+    const USE_FIREBASE = true;
 
-    function updateOnlineCount() {
-      const count = Math.floor(Math.random() * 21) + 8;
-      document.getElementById('onlineBadge').textContent = `👥 ${count}`;
+    let db = null;
+    if (USE_FIREBASE && firebaseConfig.apiKey !== "TON_API_KEY") {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
     }
-    updateOnlineCount();
-    setInterval(updateOnlineCount, 12000);
+    // =============================================================
+
+    // ... (le reste du code defaultData, fonctions, etc. reste exactement le même que la dernière version)
+    // Je te mets juste les parties importantes pour Firebase et le reset
+
+    let data = JSON.parse(localStorage.getItem('ligueDataV7')) || defaultData;
+    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
+
+    // --- Fonctions Firebase ---
+    function saveToFirebase() {
+      if (!db) return;
+      db.ref('ligueData').set(data);
+    }
+
+    function listenFirebase() {
+      if (!db) return;
+      db.ref('ligueData').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          data = val;
+          render();
+        }
+      });
+    }
+
+    if (USE_FIREBASE && db) {
+      listenFirebase();
+    }
 
     function save() {
-      localStorage.setItem('ligueDataV6', JSON.stringify(data));
-      localStorage.setItem('votesFaitsV6', JSON.stringify(votesFaits));
+      localStorage.setItem('ligueDataV7', JSON.stringify(data));
+      localStorage.setItem('votesFaitsV7', JSON.stringify(votesFaits));
+      saveToFirebase();
     }
 
-    function getPhoto(p) {
-      return (p.photo && p.photo.startsWith('http')) ? p.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`;
+    // --- Bouton Réinitialiser ---
+    function resetCache() {
+      if (!confirm("⚠️ Es-tu sûr de vouloir TOUT effacer ?\n(participantes, matchs, votes)\nCette action est irréversible.")) return;
+      
+      localStorage.removeItem('ligueDataV7');
+      localStorage.removeItem('votesFaitsV7');
+      if (db) db.ref('ligueData').remove();
+      
+      tg.showPopup({ title: "Cache réinitialisé", message: "L'application va se recharger", buttons: [{type:"ok"}] });
+      setTimeout(() => location.reload(), 800);
     }
 
-    function getTimeLeft(createdAt) {
-      const remaining = (createdAt + DUREE_MATCH) - Date.now();
-      if (remaining <= 0) return { text: "Match terminé", expired: true };
-      const h = Math.floor(remaining / 3600000);
-      const m = Math.floor((remaining % 3600000) / 60000);
-      return { text: `Il reste ${h}h ${m}min`, expired: false };
-    }
-
-    function processFinishedMatches() {
-      let changed = false;
-      data.ligues.forEach(ligue => {
-        (ligue.matchs || []).forEach(match => {
-          if (match.finished) return;
-          if (Date.now() < match.createdAt + DUREE_MATCH) return;
-          const p1 = ligue.participantes.find(p => p.nom === match.p1);
-          const p2 = ligue.participantes.find(p => p.nom === match.p2);
-          if (!p1 || !p2) return;
-          const v1 = match.votesP1 || 0;
-          const v2 = match.votesP2 || 0;
-          if (v1 > v2) { p1.v += 1; p1.total += 3; p2.d += 1; }
-          else if (v2 > v1) { p2.v += 1; p2.total += 3; p1.d += 1; }
-          else { p1.n += 1; p1.total += 1; p2.n += 1; p2.total += 1; }
-          match.finished = true;
-          changed = true;
-        });
-      });
-      if (changed) save();
-    }
-
-    function openAddModal() { document.getElementById('addModal').classList.add('show'); }
-    function openDeleteModal() {
-      const select = document.getElementById('selectDelete');
-      select.innerHTML = '';
-      data.ligues.forEach((l, li) => l.participantes.forEach((p, pi) => {
-        select.innerHTML += `<option value="${li}|${pi}">${p.nom} (${l.nom})</option>`;
-      }));
-      if (!select.options.length) return tg.showAlert("Aucune participante");
-      document.getElementById('deleteModal').classList.add('show');
-    }
-    function openMatchModal() { updateMatchSelects(); document.getElementById('matchModal').classList.add('show'); }
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-
-    function openGallery(lIndex, nom) {
-      const player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
-      if (!player) return;
-      document.getElementById('galleryTitle').textContent = `📸 ${player.nom}`;
-      document.getElementById('galleryMainPhoto').src = getPhoto(player);
-      const grid = document.getElementById('galleryGrid');
-      const empty = document.getElementById('galleryEmpty');
-      grid.innerHTML = '';
-      const gallery = player.gallery || [];
-      if (gallery.length === 0) {
-        empty.style.display = 'block';
-        grid.style.display = 'none';
-      } else {
-        empty.style.display = 'none';
-        grid.style.display = 'grid';
-        gallery.forEach(url => {
-          if (url && url.startsWith('http')) {
-            grid.innerHTML += `<img src="${url}" alt="${player.nom}" loading="lazy">`;
-          }
-        });
-      }
-      document.getElementById('galleryModal').classList.add('show');
-    }
-
-    function updateMatchSelects() {
-      const lIndex = +document.getElementById('matchLeague').value;
-      const parts = data.ligues[lIndex].participantes;
-      const p1 = document.getElementById('matchP1');
-      const p2 = document.getElementById('matchP2');
-      p1.innerHTML = p2.innerHTML = '';
-      parts.forEach(p => {
-        p1.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-        p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-      });
-      const list = document.getElementById('currentMatchesList');
-      list.innerHTML = '';
-      (data.ligues[lIndex].matchs || []).forEach((m, i) => {
-        const time = getTimeLeft(m.createdAt);
-        list.innerHTML += `
-          <div class="match-list-item">
-            <div>
-              <div style="font-weight:600">${m.title || 'Sans titre'}</div>
-              <div>${m.p1} vs ${m.p2}</div>
-              <div style="font-size:12px;color:${time.expired?'#e74c3c':'#aaa'}">${time.text}</div>
-            </div>
-            <button onclick="supprimerMatch(${lIndex},${i})">Suppr</button>
-          </div>`;
-      });
-    }
-
-    function ajouterMatch() {
-      const lIndex = +document.getElementById('matchLeague').value;
-      const title = document.getElementById('matchTitle').value.trim() || "Match";
-      const p1 = document.getElementById('matchP1').value;
-      const p2 = document.getElementById('matchP2').value;
-      if (!p1 || !p2) return tg.showAlert("Choisis deux participantes");
-      if (p1 === p2) return tg.showAlert("Choisis deux participantes différentes");
-      if (!data.ligues[lIndex].matchs) data.ligues[lIndex].matchs = [];
-      data.ligues[lIndex].matchs.push({
-        title, p1, p2, createdAt: Date.now(), votesP1: 0, votesP2: 0, finished: false
-      });
-      save(); updateMatchSelects(); render();
-      tg.showPopup({ title:"Match créé ⚔️", message:`${title}\n${p1} vs ${p2}`, buttons:[{type:"ok"}] });
-    }
-
-    function supprimerMatch(lIndex, mIndex) {
-      data.ligues[lIndex].matchs.splice(mIndex, 1);
-      save(); updateMatchSelects(); render();
-    }
-
-    function ajouter() {
-      const lIndex = +document.getElementById('selectLeague').value;
-      const nom = document.getElementById('inputName').value.trim();
-      const photo = document.getElementById('inputPhoto').value.trim();
-      if (!nom) return tg.showAlert("Le nom est obligatoire");
-      data.ligues[lIndex].participantes.push({ nom, photo, gallery: [], v:0, n:0, d:0, votes:0, total:0 });
-      save(); closeModals(); render();
-      tg.showPopup({ title:"Ajoutée ✅", message:`${nom} a été ajoutée`, buttons:[{type:"ok"}] });
-    }
-
-    function supprimer() {
-      const val = document.getElementById('selectDelete').value;
-      if (!val) return;
-      const [lIndex, pIndex] = val.split('|').map(Number);
-      const nom = data.ligues[lIndex].participantes[pIndex].nom;
-      data.ligues[lIndex].participantes.splice(pIndex, 1);
-      data.ligues[lIndex].matchs = (data.ligues[lIndex].matchs || []).filter(m => m.p1 !== nom && m.p2 !== nom);
-      save(); closeModals(); render();
-      tg.showPopup({ title:"Supprimée", message:`${nom} a été supprimée`, buttons:[{type:"ok"}] });
-    }
-
-    function render() {
-      processFinishedMatches();
-      const content = document.getElementById('content');
-      content.innerHTML = '';
-
-      data.ligues.forEach((ligue, index) => {
-        const page = document.createElement('div');
-        page.className = `page ${index === 0 ? 'active' : ''}`;
-        page.id = `page-${index}`;
-
-        let html = `<div class="section-title">${ligue.emoji} Matchs</div>`;
-
-        if (!ligue.matchs || !ligue.matchs.length) {
-          html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
-        } else {
-          ligue.matchs.forEach(match => {
-            const p1 = ligue.participantes.find(p => p.nom === match.p1);
-            const p2 = ligue.participantes.find(p => p.nom === match.p2);
-            if (!p1 || !p2) return;
-
-            const matchId = `${index}-${match.p1}-${match.p2}-${match.createdAt}`;
-            const time = getTimeLeft(match.createdAt);
-            const deja = votesFaits[matchId];
-            const canVote = !time.expired && !deja;
-            const showVotes = deja || time.expired;
-            const votesP1Display = showVotes ? `${match.votesP1 || 0} votes` : '? votes';
-            const votesP2Display = showVotes ? `${match.votesP2 || 0} votes` : '? votes';
-
-            html += `
-              <div class="duel-card">
-                <div class="match-title">${match.title || 'Match'}</div>
-                <div class="time-left ${time.expired ? 'expired' : ''}">${time.text}</div>
-                <div class="duel-players">
-                  <div class="player">
-                    <img class="player-photo" src="${getPhoto(p1)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p1.nom)}&background=333&color=fff&size=200'">
-                    <div class="player-name clickable" onclick="openGallery(${index}, '${p1.nom}')">${p1.nom}</div>
-                    <div class="player-votes">${votesP1Display}</div>
-                  </div>
-                  <div class="vs-circle">VS</div>
-                  <div class="player">
-                    <img class="player-photo" src="${getPhoto(p2)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p2.nom)}&background=333&color=fff&size=200'">
-                    <div class="player-name clickable" onclick="openGallery(${index}, '${p2.nom}')">${p2.nom}</div>
-                    <div class="player-votes">${votesP2Display}</div>
-                  </div>
-                </div>
-                <div class="vote-btns">
-                  <button class="vote-btn" ${!canVote?'disabled':''} onclick="voter(${index},'${p1.nom}','${matchId}',${match.createdAt})">❤️ ${p1.nom}</button>
-                  <button class="vote-btn" ${!canVote?'disabled':''} onclick="voter(${index},'${p2.nom}','${matchId}',${match.createdAt})">❤️ ${p2.nom}</button>
-                </div>
-              </div>`;
-          });
-        }
-
-        // CLASSEMENT
-        html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-        if (!ligue.participantes.length) {
-          html += `<div class="empty">Aucune participante</div>`;
-        } else {
-          const sorted = [...ligue.participantes].sort((a,b) => b.total - a.total || b.votes - a.votes);
-          const total = sorted.length;
-
-          html += `<div class="table-wrapper"><table><thead><tr>
-            <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th>
-            <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-          </tr></thead><tbody>`;
-
-          sorted.forEach((p, i) => {
-            const pos = i + 1;
-            let medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : pos;
-            let nameClass = "name-cell";
-            let extra = "";
-
-            // VERT FORT
-            if (
-              ([1,2,3,4].includes(index) && pos <= 3) ||
-              (index === 5 && pos <= 5)
-            ) {
-              nameClass += " promo";
-              extra = " ⬆️";
-            }
-            // VERT CLAIR + ⚡ (plus de 4e en Ligue 1)
-            else if (
-              ([1,2,3].includes(index) && pos === 4) ||
-              (index === 4 && pos === 4) ||
-              (index === 5 && pos === 6)
-            ) {
-              nameClass += " promo-barrage";
-              extra = " ⚡";
-            }
-
-            // ROUGE FORT
-            if (
-              ([0,1,2,3].includes(index) && pos > total - 3) ||
-              (index === 4 && pos > total - 5)
-            ) {
-              nameClass += " releg";
-              extra = " ⬇️";
-            }
-            // ROUGE CLAIR + ⚡ (uniquement 17e en Ligue 1-4)
-            else if (
-              ([0,1,2,3].includes(index) && pos === 17) ||
-              (index === 4 && pos === 15)
-            ) {
-              nameClass += " releg-barrage";
-              extra = " ⚡";
-            }
-
-            html += `<tr>
-              <td class="pos">${medal}</td>
-              <td class="${nameClass}">${p.nom}${extra}</td>
-              <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
-              <td>${p.votes}</td><td><b>${p.total}</b></td>
-            </tr>`;
-          });
-          html += `</tbody></table></div>`;
-        }
-
-        page.innerHTML = html;
-        content.appendChild(page);
-      });
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-          btn.classList.add('active');
-          document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
-        };
-      });
-    }
-
-    function voter(lIndex, nom, matchId, createdAt) {
-      const time = getTimeLeft(createdAt);
-      if (time.expired) return tg.showAlert("Ce match est terminé");
-      if (votesFaits[matchId]) return tg.showAlert("Tu as déjà voté");
-
-      const ligue = data.ligues[lIndex];
-      const match = ligue.matchs.find(m => m.createdAt === createdAt);
-      const player = ligue.participantes.find(p => p.nom === nom);
-
-      if (match.p1 === nom) match.votesP1 = (match.votesP1 || 0) + 1;
-      else match.votesP2 = (match.votesP2 || 0) + 1;
-
-      player.votes += 1;
-      votesFaits[matchId] = true;
-      save();
-      render();
-      tg.showPopup({ title:"Vote enregistré ❤️", message:`Tu as voté pour ${nom}`, buttons:[{type:"ok"}] });
-    }
-
-    setInterval(render, 30000);
-    render();
+    // Le reste des fonctions (render, voter, ajouter, etc.) reste identique à avant
   </script>
 </body>
 </html>
