@@ -40,6 +40,20 @@
       border-radius: 20px;
       font-weight: 600;
     }
+    #dmAdminBtn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.35);
+      border: none;
+      color: white;
+      font-size: 15px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+    }
     .nav { display:flex; overflow-x:auto; background:#121212; border-bottom:1px solid #222; scrollbar-width:none; }
     .nav::-webkit-scrollbar { display:none; }
     .nav-btn { flex:0 0 auto; padding:13px 15px; background:none; border:none; color:#777; font-size:14px; font-weight:600; white-space:nowrap; position:relative; }
@@ -113,6 +127,7 @@
 </head>
 <body>
   <div class="header">
+    <button id="dmAdminBtn" onclick="contactAdmin()" title="Contacter l'admin">💬</button>
     👑 Ligue des Influenceuses
     <div id="onlineBadge">👥 --</div>
   </div>
@@ -395,7 +410,7 @@
     let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
     let isAdmin = false;
 
-    // Normalisation au cas où d'anciennes données n'ont pas les champs All-Time
+    // Normalisation
     data.ligues.forEach(ligue => {
       ligue.participantes.forEach(p => {
         p.atV = p.atV || 0;
@@ -432,7 +447,6 @@
         const val = snapshot.val();
         if (val) {
           data = val;
-          // Normalisation
           data.ligues.forEach(ligue => {
             ligue.participantes.forEach(p => {
               p.atV = p.atV || 0;
@@ -457,20 +471,23 @@
       saveToFirebase();
     }
 
-    // ========== RESET = FIN DE SAISON (conserve All-Time) ==========
+    // Bouton DM Admin
+    function contactAdmin() {
+      tg.openTelegramLink(`https://t.me/user?id=${ADMIN_ID}`);
+    }
+
+    // ========== RESET = FIN DE SAISON ==========
     function resetCache() {
       if (!confirm("⚠️ FIN DE SAISON ?\n\nCela va :\n• Transférer les stats de la saison vers le classement All-Time\n• Remettre V/N/D/Votes/Total à 0\n• Supprimer tous les matchs\n\nLes participantes et le classement All-Time sont CONSERVÉS.")) return;
 
       data.ligues.forEach(ligue => {
         ligue.participantes.forEach(p => {
-          // Accumulation All-Time
           p.atV = (p.atV || 0) + (p.v || 0);
           p.atN = (p.atN || 0) + (p.n || 0);
           p.atD = (p.atD || 0) + (p.d || 0);
           p.atVotes = (p.atVotes || 0) + (p.votes || 0);
           p.atTotal = (p.atTotal || 0) + (p.total || 0);
 
-          // Reset saison
           p.v = 0;
           p.n = 0;
           p.d = 0;
@@ -491,7 +508,7 @@
       });
     }
 
-    // ========== RESET ALL-TIME (admin only) ==========
+    // ========== RESET ALL-TIME ==========
     function resetAllTime() {
       if (!confirm("⚠️ Remettre TOUT le classement All-Time à zéro ?\n\nCette action est irréversible.\nLes stats de la saison en cours ne sont PAS touchées.")) return;
 
@@ -506,7 +523,7 @@
       });
 
       save();
-      openAllTimeModal(); // on rafraîchit l'affichage
+      openAllTimeModal();
 
       tg.showPopup({
         title: "All-Time réinitialisé",
@@ -702,7 +719,6 @@
 
       document.getElementById('alltimeContent').innerHTML = html;
 
-      // Affiche le bouton reset uniquement pour l'admin
       const resetBtn = document.getElementById('resetAllTimeBtn');
       if (resetBtn) {
         resetBtn.style.display = isAdmin ? 'block' : 'none';
@@ -810,7 +826,6 @@
           });
         }
 
-        // Classement
         html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
         if (!ligue.participantes.length) {
           html += `<div class="empty">Aucune participante</div>`;
@@ -878,7 +893,7 @@
       else match.votesP2 = (match.votesP2 || 0) + 1;
 
       player.votes += 1;
-      player.atVotes = (player.atVotes || 0) + 1;   // aussi dans All-Time
+      player.atVotes = (player.atVotes || 0) + 1;
       votesFaits[matchId] = true;
       save();
       render();
