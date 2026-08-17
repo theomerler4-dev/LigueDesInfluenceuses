@@ -98,7 +98,6 @@
     .match-list-item { background:#252525; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:14px; }
     .match-list-item button { background:#e74c3c; border:none; color:white; padding:6px 10px; border-radius:8px; font-size:12px; }
 
-    /* Galerie photos */
     .gallery-main {
       width: 100%;
       max-height: 320px;
@@ -150,7 +149,7 @@
     <button class="admin-btn btn-del" onclick="openDeleteModal()">🗑️</button>
   </div>
 
-  <!-- Modal Ajouter Participante -->
+  <!-- Modal Ajouter -->
   <div class="modal" id="addModal">
     <div class="modal-content">
       <div class="modal-title">➕ Ajouter une participante</div>
@@ -182,7 +181,7 @@
     </div>
   </div>
 
-  <!-- Modal Créer Match -->
+  <!-- Modal Match -->
   <div class="modal" id="matchModal">
     <div class="modal-content">
       <div class="modal-title">⚔️ Créer un match</div>
@@ -207,7 +206,7 @@
     </div>
   </div>
 
-  <!-- Modal Galerie Photos -->
+  <!-- Modal Galerie -->
   <div class="modal" id="galleryModal">
     <div class="modal-content">
       <div class="modal-title" id="galleryTitle">Photos</div>
@@ -226,156 +225,78 @@
 
     const defaultData = {
       ligues: [
-        {
-          nom: "Ligue 1", emoji: "🏆",
-          participantes: [
-            {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        },
-        {
-          nom: "Ligue 2", emoji: "🥈",
-          participantes: [
-            {nom:"Camille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Léonie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Apolline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Capucine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Diane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Élise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Fanny",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Garance",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Héloïse",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Justine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Kenza",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lilou",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Margaux",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Océane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Pauline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Romane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Solène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Thaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Victoire",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Yasmine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        },
-        {
-          nom: "Ligue 3", emoji: "🥉",
-          participantes: [
-            {nom:"Alicia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Bianca",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Célia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Daphné",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Elena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Flora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Giulia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Hanna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Isis",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Juliette",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Kim",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Mélissa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Nora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Olivia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Pénélope",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Quitterie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Roxane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Sienna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Talia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        },
-        {
-          nom: "Ligue 4", emoji: "⭐",
-          participantes: [
-            {nom:"Anaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Bonnie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Candice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Delphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Estelle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Fleur",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Gabrielle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Hortense",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Ingrid",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Jeanne",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Karine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Laure",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Maëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Noémie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Ophélie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Priscille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Rosalie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Sylvie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Tiffany",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Valentine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        },
-        {
-          nom: "Ligue 5", emoji: "🌟",
-          participantes: [
-            {nom:"Aurore",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Bérénice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Cécile",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Désirée",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Élodie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Frédérique",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Gwenaëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Hermine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Irène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Joséphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Katia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lucie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Morgane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Nadège",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Ornella",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Perrine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Stéphanie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Tatiana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Ursula",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        },
-        {
-          nom: "Ligue Ascension", emoji: "🚀",
-          participantes: [
-            {nom:"Maya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Noa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Elya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Iris",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Mila",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Nova",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Pia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Sia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Tia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Uma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Vita",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Willa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Xena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Yara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Zia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Alya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Baya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-            {nom:"Cira",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
-          ], matchs: []
-        }
+        { nom:"Ligue 1", emoji:"🏆", participantes:[
+          {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] },
+        { nom:"Ligue 2", emoji:"🥈", participantes:[
+          {nom:"Camille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Léonie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Apolline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Capucine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Diane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Élise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Fanny",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Garance",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Héloïse",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Justine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Kenza",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lilou",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Margaux",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Océane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Pauline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Romane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Solène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Thaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Victoire",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Yasmine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] },
+        { nom:"Ligue 3", emoji:"🥉", participantes:[
+          {nom:"Alicia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bianca",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Célia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Daphné",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Elena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Flora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Giulia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hanna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Isis",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Juliette",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Kim",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Mélissa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Olivia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Pénélope",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Quitterie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Roxane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Sienna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Talia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] },
+        { nom:"Ligue 4", emoji:"⭐", participantes:[
+          {nom:"Anaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bonnie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Candice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Delphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Estelle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Fleur",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Gabrielle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hortense",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Ingrid",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Jeanne",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Karine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Laure",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Maëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Noémie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Ophélie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Priscille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Rosalie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sylvie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Tiffany",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Valentine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] },
+        { nom:"Ligue 5", emoji:"🌟", participantes:[
+          {nom:"Aurore",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Bérénice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Cécile",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Désirée",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Élodie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Frédérique",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Gwenaëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Hermine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Irène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Joséphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Katia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Lucie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Morgane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nadège",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Ornella",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Perrine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Stéphanie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Tatiana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Ursula",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] },
+        { nom:"Ligue Ascension", emoji:"🚀", participantes:[
+          {nom:"Maya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Noa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Elya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Iris",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Mila",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Nova",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Pia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Tia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Uma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Vita",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Willa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Xena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Yara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Zia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Alya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Baya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Cira",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+        ], matchs:[] }
       ]
     };
 
@@ -417,12 +338,10 @@
       return { text: `Il reste ${h}h ${m}min`, expired: false };
     }
 
-    // Vérifie si une joueuse est actuellement dans un match en cours
     function isInCurrentMatch(lIndex, nom) {
       const ligue = data.ligues[lIndex];
       return (ligue.matchs || []).some(m => 
-        !m.finished && 
-        Date.now() < m.createdAt + DUREE_MATCH &&
+        !m.finished && Date.now() < m.createdAt + DUREE_MATCH &&
         (m.p1 === nom || m.p2 === nom)
       );
     }
@@ -433,21 +352,14 @@
         (ligue.matchs || []).forEach(match => {
           if (match.finished) return;
           if (Date.now() < match.createdAt + DUREE_MATCH) return;
-
           const p1 = ligue.participantes.find(p => p.nom === match.p1);
           const p2 = ligue.participantes.find(p => p.nom === match.p2);
           if (!p1 || !p2) return;
-
           const v1 = match.votesP1 || 0;
           const v2 = match.votesP2 || 0;
-
-          if (v1 > v2) {
-            p1.v += 1; p1.total += 3; p2.d += 1;
-          } else if (v2 > v1) {
-            p2.v += 1; p2.total += 3; p1.d += 1;
-          } else {
-            p1.n += 1; p1.total += 1; p2.n += 1; p2.total += 1;
-          }
+          if (v1 > v2) { p1.v += 1; p1.total += 3; p2.d += 1; }
+          else if (v2 > v1) { p2.v += 1; p2.total += 3; p1.d += 1; }
+          else { p1.n += 1; p1.total += 1; p2.n += 1; p2.total += 1; }
           match.finished = true;
           changed = true;
         });
@@ -468,18 +380,14 @@
     function openMatchModal() { updateMatchSelects(); document.getElementById('matchModal').classList.add('show'); }
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
 
-    // ========== GALERIE PHOTOS ==========
     function openGallery(lIndex, nom) {
       const player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
       if (!player) return;
-
       document.getElementById('galleryTitle').textContent = `📸 ${player.nom}`;
       document.getElementById('galleryMainPhoto').src = getPhoto(player);
-
       const grid = document.getElementById('galleryGrid');
       const empty = document.getElementById('galleryEmpty');
       grid.innerHTML = '';
-
       const gallery = player.gallery || [];
       if (gallery.length === 0) {
         empty.style.display = 'block';
@@ -493,7 +401,6 @@
           }
         });
       }
-
       document.getElementById('galleryModal').classList.add('show');
     }
 
@@ -507,7 +414,6 @@
         p1.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
         p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
       });
-
       const list = document.getElementById('currentMatchesList');
       list.innerHTML = '';
       (data.ligues[lIndex].matchs || []).forEach((m, i) => {
@@ -531,7 +437,6 @@
       const p2 = document.getElementById('matchP2').value;
       if (!p1 || !p2) return tg.showAlert("Choisis deux participantes");
       if (p1 === p2) return tg.showAlert("Choisis deux participantes différentes");
-
       if (!data.ligues[lIndex].matchs) data.ligues[lIndex].matchs = [];
       data.ligues[lIndex].matchs.push({
         title, p1, p2, createdAt: Date.now(), votesP1: 0, votesP2: 0, finished: false
@@ -550,9 +455,7 @@
       const nom = document.getElementById('inputName').value.trim();
       const photo = document.getElementById('inputPhoto').value.trim();
       if (!nom) return tg.showAlert("Le nom est obligatoire");
-      data.ligues[lIndex].participantes.push({ 
-        nom, photo, gallery: [], v:0, n:0, d:0, votes:0, total:0 
-      });
+      data.ligues[lIndex].participantes.push({ nom, photo, gallery: [], v:0, n:0, d:0, votes:0, total:0 });
       save(); closeModals(); render();
       tg.showPopup({ title:"Ajoutée ✅", message:`${nom} a été ajoutée`, buttons:[{type:"ok"}] });
     }
@@ -570,7 +473,6 @@
 
     function render() {
       processFinishedMatches();
-
       const content = document.getElementById('content');
       content.innerHTML = '';
 
@@ -593,14 +495,9 @@
             const time = getTimeLeft(match.createdAt);
             const deja = votesFaits[matchId];
             const canVote = !time.expired && !deja;
-
             const showVotes = deja || time.expired;
             const votesP1Display = showVotes ? `${match.votesP1 || 0} votes` : '? votes';
             const votesP2Display = showVotes ? `${match.votesP2 || 0} votes` : '? votes';
-
-            // Noms cliquables car elles sont dans un match
-            const name1Class = "player-name clickable";
-            const name2Class = "player-name clickable";
 
             html += `
               <div class="duel-card">
@@ -609,13 +506,13 @@
                 <div class="duel-players">
                   <div class="player">
                     <img class="player-photo" src="${getPhoto(p1)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p1.nom)}&background=333&color=fff&size=200'">
-                    <div class="${name1Class}" onclick="openGallery(${index}, '${p1.nom}')">${p1.nom}</div>
+                    <div class="player-name clickable" onclick="openGallery(${index}, '${p1.nom}')">${p1.nom}</div>
                     <div class="player-votes">${votesP1Display}</div>
                   </div>
                   <div class="vs-circle">VS</div>
                   <div class="player">
                     <img class="player-photo" src="${getPhoto(p2)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p2.nom)}&background=333&color=fff&size=200'">
-                    <div class="${name2Class}" onclick="openGallery(${index}, '${p2.nom}')">${p2.nom}</div>
+                    <div class="player-name clickable" onclick="openGallery(${index}, '${p2.nom}')">${p2.nom}</div>
                     <div class="player-votes">${votesP2Display}</div>
                   </div>
                 </div>
@@ -627,7 +524,7 @@
           });
         }
 
-        // ========== CLASSEMENT ==========
+        // CLASSEMENT
         html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
         if (!ligue.participantes.length) {
           html += `<div class="empty">Aucune participante</div>`;
@@ -646,7 +543,7 @@
             let nameClass = "name-cell";
             let extra = "";
 
-            // Vert fort
+            // ===== VERT FORT =====
             if (
               ([1,2,3,4].includes(index) && pos <= 3) ||
               (index === 5 && pos <= 5)
@@ -654,16 +551,17 @@
               nameClass += " promo";
               extra = " ⬆️";
             }
-            // Vert clair + éclair
+            // ===== VERT CLAIR + ⚡ =====
             else if (
-              ([1,2,3].includes(index) && pos === 4) ||
-              (index === 5 && pos === 6)
+              ([1,2,3].includes(index) && pos === 4) ||   // 4e ligues 2-3-4
+              (index === 4 && pos === 4) ||               // 4e Ligue 5  ← NOUVEAU
+              (index === 5 && pos === 6)                  // 6e Ascension
             ) {
               nameClass += " promo-barrage";
               extra = " ⚡";
             }
 
-            // Rouge fort
+            // ===== ROUGE FORT =====
             if (
               ([0,1,2,3].includes(index) && pos > total - 3) ||
               (index === 4 && pos > total - 5)
@@ -671,19 +569,18 @@
               nameClass += " releg";
               extra = " ⬇️";
             }
-            // Rouge clair + éclair
+            // ===== ROUGE CLAIR + ⚡ =====
             else if (
-              ([0,1,2,3].includes(index) && pos === 17) ||
-              (index === 4 && pos === 15)
+              ([0,1,2,3].includes(index) && pos === 17) ||  // 17e ligues 1-4
+              (index === 0 && pos === 16) ||                // 16e Ligue 1  ← NOUVEAU
+              (index === 4 && pos === 15)                   // 15e Ligue 5
             ) {
               nameClass += " releg-barrage";
               extra = " ⚡";
             }
 
-            // Rendre le nom cliquable si elle est dans un match en cours
             const isClickable = isInCurrentMatch(index, p.nom);
             if (isClickable) nameClass += " clickable";
-
             const clickAttr = isClickable ? `onclick="openGallery(${index}, '${p.nom}')"` : "";
 
             html += `<tr>
