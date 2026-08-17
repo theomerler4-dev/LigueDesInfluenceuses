@@ -67,7 +67,6 @@
     th { background:#1f1f1f; padding:11px 6px; text-align:center; color:#bbb; }
     td { padding:11px 6px; text-align:center; border-bottom:1px solid #252525; }
     .name-cell { text-align:left!important; padding-left:12px!important; font-weight:600; }
-    .name-cell.clickable { cursor: pointer; text-decoration: underline; }
     
     .name-cell.promo { color: #2ecc71; }
     .name-cell.promo-barrage { color: #82e0aa; }
@@ -226,16 +225,26 @@
     const defaultData = {
       ligues: [
         { nom:"Ligue 1", emoji:"🏆", participantes:[
-          {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
-          {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
+          {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
+          {nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0}
         ], matchs:[] },
         { nom:"Ligue 2", emoji:"🥈", participantes:[
           {nom:"Camille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},{nom:"Léonie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0},
@@ -336,14 +345,6 @@
       const h = Math.floor(remaining / 3600000);
       const m = Math.floor((remaining % 3600000) / 60000);
       return { text: `Il reste ${h}h ${m}min`, expired: false };
-    }
-
-    function isInCurrentMatch(lIndex, nom) {
-      const ligue = data.ligues[lIndex];
-      return (ligue.matchs || []).some(m => 
-        !m.finished && Date.now() < m.createdAt + DUREE_MATCH &&
-        (m.p1 === nom || m.p2 === nom)
-      );
     }
 
     function processFinishedMatches() {
@@ -524,7 +525,7 @@
           });
         }
 
-        // CLASSEMENT
+        // ========== CLASSEMENT ==========
         html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
         if (!ligue.participantes.length) {
           html += `<div class="empty">Aucune participante</div>`;
@@ -543,7 +544,7 @@
             let nameClass = "name-cell";
             let extra = "";
 
-            // ===== VERT FORT =====
+            // VERT FORT
             if (
               ([1,2,3,4].includes(index) && pos <= 3) ||
               (index === 5 && pos <= 5)
@@ -551,17 +552,18 @@
               nameClass += " promo";
               extra = " ⬆️";
             }
-            // ===== VERT CLAIR + ⚡ =====
+            // VERT CLAIR + ⚡
             else if (
-              ([1,2,3].includes(index) && pos === 4) ||   // 4e ligues 2-3-4
-              (index === 4 && pos === 4) ||               // 4e Ligue 5  ← NOUVEAU
-              (index === 5 && pos === 6)                  // 6e Ascension
+              (index === 0 && pos === 4) ||
+              ([1,2,3].includes(index) && pos === 4) ||
+              (index === 4 && pos === 4) ||
+              (index === 5 && pos === 6)
             ) {
               nameClass += " promo-barrage";
               extra = " ⚡";
             }
 
-            // ===== ROUGE FORT =====
+            // ROUGE FORT (18-19-20 pour Ligue 1-4 / 16-20 pour Ligue 5)
             if (
               ([0,1,2,3].includes(index) && pos > total - 3) ||
               (index === 4 && pos > total - 5)
@@ -569,23 +571,18 @@
               nameClass += " releg";
               extra = " ⬇️";
             }
-            // ===== ROUGE CLAIR + ⚡ =====
+            // ROUGE CLAIR + ⚡ (uniquement la 17e pour Ligue 1-4 / 15e pour Ligue 5)
             else if (
-              ([0,1,2,3].includes(index) && pos === 17) ||  // 17e ligues 1-4
-              (index === 0 && pos === 16) ||                // 16e Ligue 1  ← NOUVEAU
-              (index === 4 && pos === 15)                   // 15e Ligue 5
+              ([0,1,2,3].includes(index) && pos === 17) ||
+              (index === 4 && pos === 15)
             ) {
               nameClass += " releg-barrage";
               extra = " ⚡";
             }
 
-            const isClickable = isInCurrentMatch(index, p.nom);
-            if (isClickable) nameClass += " clickable";
-            const clickAttr = isClickable ? `onclick="openGallery(${index}, '${p.nom}')"` : "";
-
             html += `<tr>
               <td class="pos">${medal}</td>
-              <td class="${nameClass}" ${clickAttr}>${p.nom}${extra}</td>
+              <td class="${nameClass}">${p.nom}${extra}</td>
               <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
               <td>${p.votes}</td><td><b>${p.total}</b></td>
             </tr>`;
