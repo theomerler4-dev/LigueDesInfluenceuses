@@ -57,7 +57,7 @@
 
     .duel-players { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
     .player { flex:1; text-align:center; display:flex; flex-direction:column; align-items:center; }
-    .player-photo { width:84px; height:84px; border-radius:50%; object-fit:cover; border:3px solid #333; margin-bottom:8px; background:#222; }
+    .player-photo { width:84px; height:84px; border-radius:50%; object-fit:cover; border:3px solid #333; margin-bottom:8px; background:#222; cursor:pointer; }
     .player-name { font-weight:700; font-size:15px; }
     .player-name.clickable { color: var(--pink); text-decoration: underline; cursor: pointer; }
     .player-votes { font-size:12px; color:var(--pink); margin-top:2px; }
@@ -82,11 +82,13 @@
     .empty { text-align:center; color:#666; padding:40px 20px; font-size:14px; line-height:1.5; }
 
     .admin-buttons { position:fixed; bottom:22px; right:14px; display:none; flex-direction:column; gap:10px; z-index:200; }
+    .public-buttons { position:fixed; bottom:22px; left:14px; display:flex; flex-direction:column; gap:10px; z-index:200; }
     .admin-btn { width:54px; height:54px; border-radius:50%; border:none; color:white; font-size:20px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
     .btn-add { background:linear-gradient(135deg,#ff0066,#ff2d78); }
     .btn-match { background:#2ecc71; }
     .btn-del { background:#333; }
     .btn-reset { background:#e67e22; font-size:18px; }
+    .btn-alltime { background:linear-gradient(135deg,#3498db,#2980b9); }
 
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:300; align-items:flex-end; justify-content:center; }
     .modal.show { display:flex; }
@@ -107,6 +109,8 @@
     .gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
     .gallery-grid img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; background:#222; }
     .gallery-empty { text-align:center; color:#777; padding:20px; font-size:14px; }
+
+    .profile-stats { text-align:center; background:#252525; border-radius:14px; padding:14px; margin-bottom:18px; font-size:14px; line-height:1.6; }
   </style>
 </head>
 <body>
@@ -126,11 +130,13 @@
 
   <div class="content" id="content"></div>
 
+  <div class="public-buttons">
+    <button class="admin-btn btn-alltime" onclick="openAllTimeModal()" title="Classement All-Time">🏆</button>
+  </div>
+
   <div class="admin-buttons" id="adminButtons">
     <button class="admin-btn btn-reset" onclick="resetCache()" title="Réinitialiser le cache">🔄</button>
     <button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
-    <button class="admin-btn btn-add" onclick="openAddModal()">+</button>
-    <button class="admin-btn btn-del" onclick="openDeleteModal()">🗑️</button>
   </div>
 
   <!-- Modal Ajouter -->
@@ -197,6 +203,31 @@
       <img id="galleryMainPhoto" class="gallery-main" src="" alt="">
       <div id="galleryGrid" class="gallery-grid"></div>
       <div id="galleryEmpty" class="gallery-empty" style="display:none;">Aucune photo supplémentaire</div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Classement All-Time -->
+  <div class="modal" id="alltimeModal">
+    <div class="modal-content">
+      <div class="modal-title">🏆 Classement All-Time (depuis Saison 1)</div>
+      <div id="alltimeContent"></div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Profil / Calendrier -->
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <div class="modal-title" id="profileTitle">Profil</div>
+      <img id="profilePhoto" class="gallery-main" src="" alt="">
+      <div id="profileStats" class="profile-stats"></div>
+      <div class="section-title">📅 Calendrier & Histoire de la saison</div>
+      <div id="profileMatches"></div>
       <div class="modal-actions" style="margin-top:20px;">
         <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
       </div>
@@ -522,6 +553,119 @@
       document.getElementById('galleryModal').classList.add('show');
     }
 
+    function openProfile(lIndex, nom) {
+      const player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+      if (!player) return;
+
+      document.getElementById('profileTitle').textContent = `👤 ${player.nom}`;
+      document.getElementById('profilePhoto').src = getPhoto(player);
+
+      document.getElementById('profileStats').innerHTML = `
+        <div><strong>Saison en cours</strong></div>
+        <div>Victoires : ${player.v} &nbsp;|&nbsp; Nuls : ${player.n} &nbsp;|&nbsp; Défaites : ${player.d}</div>
+        <div>Votes : ${player.votes} &nbsp;|&nbsp; Points : <b>${player.total}</b></div>
+      `;
+
+      const matchesDiv = document.getElementById('profileMatches');
+      matchesDiv.innerHTML = '';
+      const ligue = data.ligues[lIndex];
+      const herMatches = (ligue.matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
+
+      if (herMatches.length === 0) {
+        matchesDiv.innerHTML = '<div class="empty">Aucun match cette saison</div>';
+      } else {
+        // Tri du plus récent au plus ancien
+        herMatches.sort((a, b) => b.createdAt - a.createdAt);
+
+        herMatches.forEach(m => {
+          const opponent = m.p1 === nom ? m.p2 : m.p1;
+          const time = getTimeLeft(m.createdAt);
+          let resultText = '';
+          let resultColor = '#aaa';
+
+          if (m.finished) {
+            const v1 = m.votesP1 || 0;
+            const v2 = m.votesP2 || 0;
+            const myVotes = m.p1 === nom ? v1 : v2;
+            const oppVotes = m.p1 === nom ? v2 : v1;
+
+            if (myVotes > oppVotes) {
+              resultText = `Victoire (${myVotes} - ${oppVotes})`;
+              resultColor = '#2ecc71';
+            } else if (myVotes < oppVotes) {
+              resultText = `Défaite (${myVotes} - ${oppVotes})`;
+              resultColor = '#e74c3c';
+            } else {
+              resultText = `Nul (${myVotes} - ${oppVotes})`;
+              resultColor = '#f1c40f';
+            }
+          } else {
+            resultText = time.text;
+            resultColor = time.expired ? '#e74c3c' : 'var(--pink)';
+          }
+
+          matchesDiv.innerHTML += `
+            <div class="match-list-item">
+              <div>
+                <div style="font-weight:600">${m.title || 'Match'} vs ${opponent}</div>
+                <div style="font-size:12px;color:${resultColor}">${resultText}</div>
+              </div>
+            </div>`;
+        });
+      }
+
+      document.getElementById('profileModal').classList.add('show');
+    }
+
+    function openAllTimeModal() {
+      let allPlayers = [];
+      data.ligues.forEach((ligue) => {
+        ligue.participantes.forEach(p => {
+          allPlayers.push({
+            nom: p.nom,
+            v: p.v || 0,
+            n: p.n || 0,
+            d: p.d || 0,
+            votes: p.votes || 0,
+            total: p.total || 0,
+            league: ligue.nom,
+            emoji: ligue.emoji
+          });
+        });
+      });
+
+      allPlayers.sort((a, b) => b.total - a.total || b.votes - a.votes || a.nom.localeCompare(b.nom));
+
+      let html = '';
+      if (allPlayers.length === 0) {
+        html = '<div class="empty">Aucune participante</div>';
+      } else {
+        html = `<div class="table-wrapper"><table><thead><tr>
+          <th>#</th>
+          <th style="text-align:left;padding-left:12px">Joueuse</th>
+          <th>Ligue</th>
+          <th>V</th><th>N</th><th>D</th>
+          <th>Votes</th><th>Total</th>
+        </tr></thead><tbody>`;
+
+        allPlayers.forEach((p, i) => {
+          const pos = i + 1;
+          let medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : pos;
+          html += `<tr>
+            <td class="pos">${medal}</td>
+            <td class="name-cell">${p.nom}</td>
+            <td style="font-size:12px">${p.emoji} ${p.league}</td>
+            <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
+            <td>${p.votes}</td><td><b>${p.total}</b></td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+
+      document.getElementById('alltimeContent').innerHTML = html;
+      document.getElementById('alltimeModal').classList.add('show');
+    }
+
     function updateMatchSelects() {
       const lIndex = +document.getElementById('matchLeague').value;
       const parts = data.ligues[lIndex].participantes;
@@ -623,14 +767,14 @@
                 <div class="time-left ${time.expired ? 'expired' : ''}">${time.text}</div>
                 <div class="duel-players">
                   <div class="player">
-                    <img class="player-photo" src="${getPhoto(p1)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p1.nom)}&background=333&color=fff&size=200'">
-                    <div class="player-name clickable" onclick="openGallery(${index}, '${p1.nom}')">${p1.nom}</div>
+                    <img class="player-photo" src="${getPhoto(p1)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p1.nom)}&background=333&color=fff&size=200'" onclick="openGallery(${index}, '${p1.nom}')">
+                    <div class="player-name clickable" onclick="openProfile(${index}, '${p1.nom}')">${p1.nom}</div>
                     <div class="player-votes">${votesP1Display}</div>
                   </div>
                   <div class="vs-circle">VS</div>
                   <div class="player">
-                    <img class="player-photo" src="${getPhoto(p2)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p2.nom)}&background=333&color=fff&size=200'">
-                    <div class="player-name clickable" onclick="openGallery(${index}, '${p2.nom}')">${p2.nom}</div>
+                    <img class="player-photo" src="${getPhoto(p2)}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p2.nom)}&background=333&color=fff&size=200'" onclick="openGallery(${index}, '${p2.nom}')">
+                    <div class="player-name clickable" onclick="openProfile(${index}, '${p2.nom}')">${p2.nom}</div>
                     <div class="player-votes">${votesP2Display}</div>
                   </div>
                 </div>
