@@ -180,7 +180,10 @@
     <div class="modal-content">
       <div class="modal-title">🏆 Classement All-Time (depuis Saison 1)</div>
       <div id="alltimeContent"></div>
-      <div class="modal-actions" style="margin-top:20px;">
+      <div class="modal-actions" style="margin-top:20px; flex-direction:column; gap:10px;">
+        <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c; color:white; display:none;" onclick="resetAllTime()">
+          🗑️ Remettre All-Time à zéro
+        </button>
         <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
       </div>
     </div>
@@ -390,6 +393,7 @@
 
     let data = JSON.parse(localStorage.getItem('ligueDataV7')) || defaultData;
     let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
+    let isAdmin = false;
 
     // Normalisation au cas où d'anciennes données n'ont pas les champs All-Time
     data.ligues.forEach(ligue => {
@@ -411,6 +415,7 @@
     setTimeout(() => {
       const user = tg.initDataUnsafe?.user;
       if (user && Number(user.id) === ADMIN_ID) {
+        isAdmin = true;
         document.getElementById('adminButtons').style.display = 'flex';
       }
     }, 400);
@@ -482,6 +487,30 @@
       tg.showPopup({
         title: "Nouvelle saison lancée 🚀",
         message: "Les stats de la saison ont été ajoutées au classement All-Time.\nTous les matchs ont été effacés.",
+        buttons: [{type: "ok"}]
+      });
+    }
+
+    // ========== RESET ALL-TIME (admin only) ==========
+    function resetAllTime() {
+      if (!confirm("⚠️ Remettre TOUT le classement All-Time à zéro ?\n\nCette action est irréversible.\nLes stats de la saison en cours ne sont PAS touchées.")) return;
+
+      data.ligues.forEach(ligue => {
+        ligue.participantes.forEach(p => {
+          p.atV = 0;
+          p.atN = 0;
+          p.atD = 0;
+          p.atVotes = 0;
+          p.atTotal = 0;
+        });
+      });
+
+      save();
+      openAllTimeModal(); // on rafraîchit l'affichage
+
+      tg.showPopup({
+        title: "All-Time réinitialisé",
+        message: "Le classement All-Time est maintenant à zéro.",
         buttons: [{type: "ok"}]
       });
     }
@@ -672,6 +701,13 @@
       }
 
       document.getElementById('alltimeContent').innerHTML = html;
+
+      // Affiche le bouton reset uniquement pour l'admin
+      const resetBtn = document.getElementById('resetAllTimeBtn');
+      if (resetBtn) {
+        resetBtn.style.display = isAdmin ? 'block' : 'none';
+      }
+
       document.getElementById('alltimeModal').classList.add('show');
     }
 
