@@ -151,14 +151,75 @@
     const ADMIN_ID = 8994516214;
     const DUREE_MATCH = 24 * 60 * 60 * 1000; // 24h
 
+    // ========== PARTICIPANTES D'EXEMPLE DÉJÀ INTÉGRÉES ==========
     const defaultData = {
       ligues: [
-        { nom:"Ligue 1", emoji:"🏆", participantes:[], matchs:[] },
-        { nom:"Ligue 2", emoji:"🥈", participantes:[], matchs:[] },
-        { nom:"Ligue 3", emoji:"🥉", participantes:[], matchs:[] },
-        { nom:"Ligue 4", emoji:"⭐", participantes:[], matchs:[] },
-        { nom:"Ligue 5", emoji:"🌟", participantes:[], matchs:[] },
-        { nom:"Ligue Ascension", emoji:"🚀", participantes:[], matchs:[] }
+        {
+          nom: "Ligue 1",
+          emoji: "🏆",
+          participantes: [
+            { nom: "Léa", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Manon", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Chloé", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Emma", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        },
+        {
+          nom: "Ligue 2",
+          emoji: "🥈",
+          participantes: [
+            { nom: "Jade", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Inès", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Lola", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Sarah", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        },
+        {
+          nom: "Ligue 3",
+          emoji: "🥉",
+          participantes: [
+            { nom: "Clara", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Zoé", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Alice", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Louise", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        },
+        {
+          nom: "Ligue 4",
+          emoji: "⭐",
+          participantes: [
+            { nom: "Mia", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Nina", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Eva", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Sofia", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        },
+        {
+          nom: "Ligue 5",
+          emoji: "🌟",
+          participantes: [
+            { nom: "Lina", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Ambre", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Rose", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Julia", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        },
+        {
+          nom: "Ligue Ascension",
+          emoji: "🚀",
+          participantes: [
+            { nom: "Maya", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Noa", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Elya", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 },
+            { nom: "Iris", photo: "", v: 0, n: 0, d: 0, votes: 0, total: 0 }
+          ],
+          matchs: []
+        }
       ]
     };
 
@@ -201,7 +262,6 @@
           if (match.finished) return;
           if (Date.now() < match.createdAt + DUREE_MATCH) return;
 
-          // Match terminé → on calcule le résultat
           const p1 = ligue.participantes.find(p => p.nom === match.p1);
           const p2 = ligue.participantes.find(p => p.nom === match.p2);
           if (!p1 || !p2) return;
@@ -216,7 +276,6 @@
             p2.v += 1; p2.total += 3;
             p1.d += 1;
           } else {
-            // Nul
             p1.n += 1; p1.total += 1;
             p2.n += 1; p2.total += 1;
           }
@@ -317,7 +376,7 @@
     }
 
     function render() {
-      processFinishedMatches(); // ← très important
+      processFinishedMatches();
 
       const content = document.getElementById('content');
       content.innerHTML = '';
@@ -420,7 +479,7 @@
       if (match.p1 === nom) match.votesP1 = (match.votesP1 || 0) + 1;
       else match.votesP2 = (match.votesP2 || 0) + 1;
 
-      player.votes += 1; // total des votes reçus sur toute la saison
+      player.votes += 1;
 
       votesFaits[matchId] = true;
       save();
