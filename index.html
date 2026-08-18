@@ -133,12 +133,13 @@
   </div>
 
   <div class="nav">
-    <button class="nav-btn active" data-league="0">Ligue 1</button>
-    <button class="nav-btn" data-league="1">Ligue 2</button>
-    <button class="nav-btn" data-league="2">Ligue 3</button>
-    <button class="nav-btn" data-league="3">Ligue 4</button>
-    <button class="nav-btn" data-league="4">Ligue 5</button>
-    <button class="nav-btn" data-league="5">Ascension</button>
+    <button class="nav-btn active" data-league="0">Pré-saison</button>
+    <button class="nav-btn" data-league="1">Ligue 1</button>
+    <button class="nav-btn" data-league="2">Ligue 2</button>
+    <button class="nav-btn" data-league="3">Ligue 3</button>
+    <button class="nav-btn" data-league="4">Ligue 4</button>
+    <button class="nav-btn" data-league="5">Ligue 5</button>
+    <button class="nav-btn" data-league="6">Ascension</button>
   </div>
 
   <div class="content" id="content"></div>
@@ -159,11 +160,16 @@
       <div class="form-group">
         <label>Ligue</label>
         <select id="matchLeague" onchange="updateMatchSelects()">
-          <option value="0">Ligue 1</option><option value="1">Ligue 2</option><option value="2">Ligue 3</option>
-          <option value="3">Ligue 4</option><option value="4">Ligue 5</option><option value="5">Ligue Ascension</option>
+          <option value="0">Pré-saison</option>
+          <option value="1">Ligue 1</option>
+          <option value="2">Ligue 2</option>
+          <option value="3">Ligue 3</option>
+          <option value="4">Ligue 4</option>
+          <option value="5">Ligue 5</option>
+          <option value="6">Ligue Ascension</option>
         </select>
       </div>
-      <div class="form-group"><label>Titre du match</label><input type="text" id="matchTitle" placeholder="Ex: Saison 1 - Journée 1"></div>
+      <div class="form-group"><label>Titre du match</label><input type="text" id="matchTitle" placeholder="Ex: Match de pré-saison"></div>
       <div class="form-group"><label>Participante 1</label><select id="matchP1"></select></div>
       <div class="form-group"><label>Participante 2</label><select id="matchP2"></select></div>
       <div class="modal-actions">
@@ -247,6 +253,13 @@
 
     const defaultData = {
   ligues: [
+    // 0 - Pré-saison
+    {
+      nom: "Pré-saison", emoji: "⏳",
+      participantes: [],
+      matchs: []
+    },
+    // 1 - Ligue 1
     {
       nom: "Ligue 1", emoji: "🏆",
       participantes: [
@@ -273,6 +286,7 @@
       ],
       matchs: []
     },
+    // 2 - Ligue 2
     {
       nom: "Ligue 2", emoji: "🥈",
       participantes: [
@@ -299,6 +313,7 @@
       ],
       matchs: []
     },
+    // 3 - Ligue 3
     {
       nom: "Ligue 3", emoji: "🥉",
       participantes: [
@@ -325,6 +340,7 @@
       ],
       matchs: []
     },
+    // 4 - Ligue 4
     {
       nom: "Ligue 4", emoji: "⭐",
       participantes: [
@@ -351,6 +367,7 @@
       ],
       matchs: []
     },
+    // 5 - Ligue 5
     {
       nom: "Ligue 5", emoji: "🌟",
       participantes: [
@@ -377,6 +394,7 @@
       ],
       matchs: []
     },
+    // 6 - Ascension
     {
       nom: "Ligue Ascension", emoji: "🚀",
       participantes: [
@@ -410,7 +428,16 @@
     let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
     let isAdmin = false;
 
-    // Normalisation
+    // Normalisation + s'assurer que Pré-saison existe
+    if (!data.ligues[0] || data.ligues[0].nom !== "Pré-saison") {
+      // migration si ancienne structure
+      data.ligues.unshift({
+        nom: "Pré-saison", emoji: "⏳",
+        participantes: [],
+        matchs: []
+      });
+    }
+
     data.ligues.forEach(ligue => {
       ligue.participantes.forEach(p => {
         p.atV = p.atV || 0;
@@ -447,6 +474,14 @@
         const val = snapshot.val();
         if (val) {
           data = val;
+          // migration si besoin
+          if (!data.ligues[0] || data.ligues[0].nom !== "Pré-saison") {
+            data.ligues.unshift({
+              nom: "Pré-saison", emoji: "⏳",
+              participantes: [],
+              matchs: []
+            });
+          }
           data.ligues.forEach(ligue => {
             ligue.participantes.forEach(p => {
               p.atV = p.atV || 0;
@@ -471,16 +506,21 @@
       saveToFirebase();
     }
 
-    // Bouton DM Admin
+    // Bouton DM Admin → t.me/LDIAdmin
     function contactAdmin() {
-      tg.openTelegramLink(`https://t.me/user?id=${ADMIN_ID}`);
+      tg.openTelegramLink('https://t.me/LDIAdmin');
     }
 
     // ========== RESET = FIN DE SAISON ==========
     function resetCache() {
-      if (!confirm("⚠️ FIN DE SAISON ?\n\nCela va :\n• Transférer les stats de la saison vers le classement All-Time\n• Remettre V/N/D/Votes/Total à 0\n• Supprimer tous les matchs\n\nLes participantes et le classement All-Time sont CONSERVÉS.")) return;
+      if (!confirm("⚠️ FIN DE SAISON ?\n\nCela va :\n• Transférer les stats de la saison vers le classement All-Time\n• Remettre V/N/D/Votes/Total à 0\n• Supprimer tous les matchs (y compris Pré-saison)\n\nLes participantes et le classement All-Time sont CONSERVÉS.")) return;
 
-      data.ligues.forEach(ligue => {
+      data.ligues.forEach((ligue, idx) => {
+        if (idx === 0) {
+          // Pré-saison : on vide juste les matchs
+          ligue.matchs = [];
+          return;
+        }
         ligue.participantes.forEach(p => {
           p.atV = (p.atV || 0) + (p.v || 0);
           p.atN = (p.atN || 0) + (p.n || 0);
@@ -512,7 +552,8 @@
     function resetAllTime() {
       if (!confirm("⚠️ Remettre TOUT le classement All-Time à zéro ?\n\nCette action est irréversible.\nLes stats de la saison en cours ne sont PAS touchées.")) return;
 
-      data.ligues.forEach(ligue => {
+      data.ligues.forEach((ligue, idx) => {
+        if (idx === 0) return; // ignorer pré-saison
         ligue.participantes.forEach(p => {
           p.atV = 0;
           p.atN = 0;
@@ -553,7 +594,18 @@
 
     function processFinishedMatches() {
       let changed = false;
-      data.ligues.forEach(ligue => {
+      data.ligues.forEach((ligue, lIndex) => {
+        // On ignore complètement la Pré-saison pour les stats
+        if (lIndex === 0) {
+          (ligue.matchs || []).forEach(match => {
+            if (!match.finished && Date.now() >= match.createdAt + DUREE_MATCH) {
+              match.finished = true;
+              changed = true;
+            }
+          });
+          return;
+        }
+
         (ligue.matchs || []).forEach(match => {
           if (match.finished) return;
           if (Date.now() < match.createdAt + DUREE_MATCH) return;
@@ -585,8 +637,18 @@
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
 
     function openGallery(lIndex, nom) {
-      const player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+      // Pour la pré-saison on cherche la joueuse dans toutes les ligues
+      let player = null;
+      if (lIndex === 0) {
+        for (let i = 1; i < data.ligues.length; i++) {
+          player = data.ligues[i].participantes.find(p => p.nom === nom);
+          if (player) break;
+        }
+      } else {
+        player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+      }
       if (!player) return;
+
       document.getElementById('galleryTitle').textContent = `📸 ${player.nom}`;
       document.getElementById('galleryMainPhoto').src = getPhoto(player);
       const grid = document.getElementById('galleryGrid');
@@ -609,7 +671,20 @@
     }
 
     function openProfile(lIndex, nom) {
-      const player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+      let player = null;
+      let realLIndex = lIndex;
+
+      if (lIndex === 0) {
+        for (let i = 1; i < data.ligues.length; i++) {
+          player = data.ligues[i].participantes.find(p => p.nom === nom);
+          if (player) {
+            realLIndex = i;
+            break;
+          }
+        }
+      } else {
+        player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+      }
       if (!player) return;
 
       document.getElementById('profileTitle').textContent = `👤 ${player.nom}`;
@@ -624,7 +699,7 @@
 
       const matchesDiv = document.getElementById('profileMatches');
       matchesDiv.innerHTML = '';
-      const ligue = data.ligues[lIndex];
+      const ligue = data.ligues[realLIndex];
       const herMatches = (ligue.matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
 
       if (herMatches.length === 0) {
@@ -674,7 +749,8 @@
 
     function openAllTimeModal() {
       let allPlayers = [];
-      data.ligues.forEach((ligue) => {
+      data.ligues.forEach((ligue, idx) => {
+        if (idx === 0) return; // on ignore la Pré-saison
         ligue.participantes.forEach(p => {
           allPlayers.push({
             nom: p.nom,
@@ -729,14 +805,28 @@
 
     function updateMatchSelects() {
       const lIndex = +document.getElementById('matchLeague').value;
-      const parts = data.ligues[lIndex].participantes;
       const p1 = document.getElementById('matchP1');
       const p2 = document.getElementById('matchP2');
       p1.innerHTML = p2.innerHTML = '';
-      parts.forEach(p => {
-        p1.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-        p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-      });
+
+      if (lIndex === 0) {
+        // Pré-saison → toutes les participantes de toutes les ligues
+        data.ligues.forEach((ligue, idx) => {
+          if (idx === 0) return;
+          ligue.participantes.forEach(p => {
+            const label = `${p.nom} (${ligue.nom})`;
+            p1.innerHTML += `<option value="${p.nom}">${label}</option>`;
+            p2.innerHTML += `<option value="${p.nom}">${label}</option>`;
+          });
+        });
+      } else {
+        const parts = data.ligues[lIndex].participantes;
+        parts.forEach(p => {
+          p1.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
+          p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
+        });
+      }
+
       const list = document.getElementById('currentMatchesList');
       list.innerHTML = '';
       (data.ligues[lIndex].matchs || []).forEach((m, i) => {
@@ -789,8 +879,17 @@
           html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
         } else {
           ligue.matchs.forEach(match => {
-            const p1 = ligue.participantes.find(p => p.nom === match.p1);
-            const p2 = ligue.participantes.find(p => p.nom === match.p2);
+            // On cherche les photos même en pré-saison
+            let p1 = null, p2 = null;
+            if (index === 0) {
+              for (let i = 1; i < data.ligues.length; i++) {
+                if (!p1) p1 = data.ligues[i].participantes.find(p => p.nom === match.p1);
+                if (!p2) p2 = data.ligues[i].participantes.find(p => p.nom === match.p2);
+              }
+            } else {
+              p1 = ligue.participantes.find(p => p.nom === match.p1);
+              p2 = ligue.participantes.find(p => p.nom === match.p2);
+            }
             if (!p1 || !p2) return;
 
             const matchId = `${index}-${match.p1}-${match.p2}-${match.createdAt}`;
@@ -826,44 +925,54 @@
           });
         }
 
-        html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-        if (!ligue.participantes.length) {
-          html += `<div class="empty">Aucune participante</div>`;
+        // Classement
+        if (index === 0) {
+          // Pré-saison → pas de classement
+          html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+          html += `<div class="empty">Pas de classement en Pré-saison.<br>Les matchs n’impactent ni les stats ni l’All-Time.</div>`;
         } else {
-          const sorted = [...ligue.participantes].sort((a,b) => b.total - a.total || b.votes - a.votes);
-          const total = sorted.length;
+          html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+          if (!ligue.participantes.length) {
+            html += `<div class="empty">Aucune participante</div>`;
+          } else {
+            const sorted = [...ligue.participantes].sort((a,b) => b.total - a.total || b.votes - a.votes);
+            const total = sorted.length;
 
-          html += `<div class="table-wrapper"><table><thead><tr>
-            <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th>
-            <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-          </tr></thead><tbody>`;
+            html += `<div class="table-wrapper"><table><thead><tr>
+              <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th>
+              <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
+            </tr></thead><tbody>`;
 
-          sorted.forEach((p, i) => {
-            const pos = i + 1;
-            let medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : pos;
-            let nameClass = "name-cell";
-            let extra = "";
+            sorted.forEach((p, i) => {
+              const pos = i + 1;
+              let medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : pos;
+              let nameClass = "name-cell";
+              let extra = "";
 
-            if (([1,2,3,4].includes(index) && pos <= 3) || (index === 5 && pos <= 5)) {
-              nameClass += " promo"; extra = " ⬆️";
-            } else if (([1,2,3].includes(index) && pos === 4) || (index === 4 && pos === 4) || (index === 5 && pos === 6)) {
-              nameClass += " promo-barrage"; extra = " ⚡";
-            }
+              // Ajustement des index (Pré-saison = 0 → les ligues commencent à 1)
+              const realIndex = index; // 1=Ligue1, 2=Ligue2...
 
-            if (([0,1,2,3].includes(index) && pos > total - 3) || (index === 4 && pos > total - 5)) {
-              nameClass += " releg"; extra = " ⬇️";
-            } else if (([0,1,2,3].includes(index) && pos === 17) || (index === 4 && pos === 15)) {
-              nameClass += " releg-barrage"; extra = " ⚡";
-            }
+              if (([2,3,4,5].includes(realIndex) && pos <= 3) || (realIndex === 6 && pos <= 5)) {
+                nameClass += " promo"; extra = " ⬆️";
+              } else if (([2,3,4].includes(realIndex) && pos === 4) || (realIndex === 5 && pos === 4) || (realIndex === 6 && pos === 6)) {
+                nameClass += " promo-barrage"; extra = " ⚡";
+              }
 
-            html += `<tr>
-              <td class="pos">${medal}</td>
-              <td class="${nameClass}">${p.nom}${extra}</td>
-              <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
-              <td>${p.votes}</td><td><b>${p.total}</b></td>
-            </tr>`;
-          });
-          html += `</tbody></table></div>`;
+              if (([1,2,3,4].includes(realIndex) && pos > total - 3) || (realIndex === 5 && pos > total - 5)) {
+                nameClass += " releg"; extra = " ⬇️";
+              } else if (([1,2,3,4].includes(realIndex) && pos === 17) || (realIndex === 5 && pos === 15)) {
+                nameClass += " releg-barrage"; extra = " ⚡";
+              }
+
+              html += `<tr>
+                <td class="pos">${medal}</td>
+                <td class="${nameClass}">${p.nom}${extra}</td>
+                <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td>
+                <td>${p.votes}</td><td><b>${p.total}</b></td>
+              </tr>`;
+            });
+            html += `</tbody></table></div>`;
+          }
         }
 
         page.innerHTML = html;
@@ -887,13 +996,23 @@
 
       const ligue = data.ligues[lIndex];
       const match = ligue.matchs.find(m => m.createdAt === createdAt);
-      const player = ligue.participantes.find(p => p.nom === nom);
 
       if (match.p1 === nom) match.votesP1 = (match.votesP1 || 0) + 1;
       else match.votesP2 = (match.votesP2 || 0) + 1;
 
-      player.votes += 1;
-      player.atVotes = (player.atVotes || 0) + 1;
+      // En Pré-saison on n'incrémente PAS les stats
+      if (lIndex !== 0) {
+        // on cherche la joueuse dans sa vraie ligue
+        for (let i = 1; i < data.ligues.length; i++) {
+          const player = data.ligues[i].participantes.find(p => p.nom === nom);
+          if (player) {
+            player.votes += 1;
+            player.atVotes = (player.atVotes || 0) + 1;
+            break;
+          }
+        }
+      }
+
       votesFaits[matchId] = true;
       save();
       render();
