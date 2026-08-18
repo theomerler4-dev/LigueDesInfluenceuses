@@ -852,15 +852,15 @@ html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
             let extra = "";
 
             if (([1,2,3,4].includes(index) && pos <= 3) || (index === 5 && pos <= 5)) {
-              nameClass += " promo"; extra = " ";
+              nameClass += " promo"; extra = "⬆️";
             } else if (([1,2,3].includes(index) && pos === 4) || (index === 4 && pos === 4) || (index === 5 && pos === 6)) {
-              nameClass += " promo-barrage"; extra = " ";
+              nameClass += " promo-barrage"; extra = "⚡";
             }
 
             if (([0,1,2,3].includes(index) && pos > total - 3) || (index === 4 && pos > total - 5)) {
-              nameClass += " releg"; extra = " ";
+              nameClass += " releg"; extra = "⬇️";
             } else if (([0,1,2,3].includes(index) && pos === 17) || (index === 4 && pos === 15)) {
-              nameClass += " releg-barrage"; extra = " ";
+              nameClass += " releg-barrage"; extra = "⚡";
             }
 
 
