@@ -839,7 +839,15 @@ function ajouterMatch(){
 function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
 
 let html = '';
-
+function render(){
+  processFinishedMatches();
+  const content=document.getElementById('content');
+  content.innerHTML='';
+  data.ligues.forEach((ligue,index)=>{
+    const page=document.createElement('div');
+    page.className=`page ${index===0?'active':''}`;
+    page.id=`page-${index}`;
+    let html = '';
 // Message pour les Ligues 1 à 5
 if (index >= 1 && index <= 5) {
   html += `
