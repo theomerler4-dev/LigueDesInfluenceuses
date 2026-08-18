@@ -89,12 +89,14 @@
 
   <div class="public-buttons">
     <button class="admin-btn btn-alltime" onclick="openAllTimeModal()">🏆</button>
+    <button class="admin-btn" style="background:#9b59b6" onclick="openChatModal()">💬</button>
   </div>
 
   <div class="admin-buttons" id="adminButtons">
     <button class="admin-btn btn-reset" onclick="resetCache()">🔄</button>
     <button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
     <button class="admin-btn" style="background:#9b59b6" onclick="openEditModal()">✏️</button>
+    <button class="admin-btn" style="background:#e67e22" onclick="openTransferModal()">↕️</button>
   </div>
 
   <!-- Modal Match -->
@@ -118,6 +120,54 @@
       <div style="margin-top:20px"><div style="font-size:14px;font-weight:600;margin-bottom:10px">Matchs actuels :</div><div id="currentMatchesList"></div></div>
     </div>
   </div>
+
+  <!-- ========== MODAL CHAT ========== -->
+<div class="modal" id="chatModal">
+  <div class="modal-content" style="height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-title">💬 Chat des Ligues</div>
+    
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:10px 0;margin-bottom:15px;display:flex;flex-direction:column;gap:10px;"></div>
+    
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="chatInput" placeholder="Écris un message..." maxlength="200" 
+             style="flex:1;padding:13px 14px;border-radius:14px;border:1px solid #333;background:#252525;color:white;font-size:15px;">
+      <button onclick="sendChatMessage()" style="padding:0 18px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff0066,#ff2d78);color:white;font-weight:600;">➤</button>
+    </div>
+    
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL TRANSFERT ========== -->
+<div class="modal" id="transferModal">
+  <div class="modal-content">
+    <div class="modal-title">↕️ Transférer une influenceuse</div>
+    
+    <div class="form-group">
+      <label>Influenceuse</label>
+      <select id="transferSelect"></select>
+    </div>
+    
+    <div class="form-group">
+      <label>Nouvelle ligue</label>
+      <select id="transferLeague">
+        <option value="1">Ligue 1</option>
+        <option value="2">Ligue 2</option>
+        <option value="3">Ligue 3</option>
+        <option value="4">Ligue 4</option>
+        <option value="5">Ligue 5</option>
+        <option value="6">Ligue Ascension</option>
+      </select>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModals()">Annuler</button>
+      <button class="btn btn-confirm" onclick="transferParticipant()">Transférer</button>
+    </div>
+  </div>
+</div>
 
   <!-- Modal Modifier -->
   <div class="modal" id="editModal">
@@ -694,6 +744,116 @@ function voter(li,nom,mid,c){
 
 setInterval(render,30000);
 render();
+// ==================== CHAT ====================
+function openChatModal() {
+  document.getElementById('chatModal').classList.add('show');
+  loadChatMessages();
+  // Scroll en bas
+  setTimeout(() => {
+    const box = document.getElementById('chatMessages');
+    box.scrollTop = box.scrollHeight;
+  }, 300);
+}
+
+function loadChatMessages() {
+  if (!db) return;
+  db.ref('chat').limitToLast(50).on('value', snap => {
+    const box = document.getElementById('chatMessages');
+    box.innerHTML = '';
+    const messages = [];
+    snap.forEach(child => messages.push({id: child.key, ...child.val()}));
+    
+    messages.forEach(msg => {
+      const isMe = msg.userId === (tg.initDataUnsafe?.user?.id || 0);
+      const date = new Date(msg.time).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+      
+      box.innerHTML += `
+        <div style="align-self:${isMe ? 'flex-end' : 'flex-start'};max-width:80%;">
+          <div style="font-size:11px;color:#888;margin-bottom:2px;${isMe ? 'text-align:right' : ''}">
+            ${msg.userName || 'Anonyme'} • ${date}
+          </div>
+          <div style="background:${isMe ? 'linear-gradient(135deg,#ff0066,#ff2d78)' : '#252525'};
+                      padding:10px 14px;border-radius:16px;font-size:14px;word-break:break-word;">
+            ${msg.text}
+          </div>
+        </div>`;
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !db) return;
+
+  const user = tg.initDataUnsafe?.user;
+  db.ref('chat').push({
+    text: text,
+    userId: user?.id || 0,
+    userName: user?.first_name || 'Anonyme',
+    time: Date.now()
+  });
+
+  input.value = '';
+}
+
+// Envoyer avec la touche Entrée
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && document.getElementById('chatModal').classList.contains('show')) {
+    sendChatMessage();
+  }
+});
+
+// ==================== TRANSFERT ====================
+function openTransferModal() {
+  const select = document.getElementById('transferSelect');
+  select.innerHTML = '<option value="">-- Choisir une influenceuse --</option>';
+  
+  data.ligues.forEach((l, li) => {
+    if (li === 0) return; // on ignore la pré-saison
+    l.participantes.forEach((p, pi) => {
+      select.innerHTML += `<option value="${li}|${pi}">${p.nom} (${l.nom})</option>`;
+    });
+  });
+  
+  document.getElementById('transferModal').classList.add('show');
+}
+
+function transferParticipant() {
+  const val = document.getElementById('transferSelect').value;
+  const newLeague = parseInt(document.getElementById('transferLeague').value);
+  
+  if (!val) return tg.showAlert("Choisis une influenceuse");
+  
+  const [oldLi, pi] = val.split('|').map(Number);
+  
+  if (oldLi === newLeague) return tg.showAlert("Elle est déjà dans cette ligue");
+  
+  // Récupérer la participante
+  const participant = data.ligues[oldLi].participantes[pi];
+  
+  // Supprimer de l'ancienne ligue
+  data.ligues[oldLi].participantes.splice(pi, 1);
+  
+  // Nettoyer les matchs de l'ancienne ligue qui la concernent
+  data.ligues[oldLi].matchs = (data.ligues[oldLi].matchs || []).filter(m => 
+    m.p1 !== participant.nom && m.p2 !== participant.nom
+  );
+  
+  // Ajouter dans la nouvelle ligue
+  data.ligues[newLeague].participantes.push(participant);
+  
+  save();
+  closeModals();
+  render();
+  
+  tg.showPopup({
+    title: "Transfert réussi ↕️",
+    message: `${participant.nom} est maintenant en ${data.ligues[newLeague].nom}`,
+    buttons: [{type: "ok"}]
+  });
+}
 </script>
 </body>
 </html>
