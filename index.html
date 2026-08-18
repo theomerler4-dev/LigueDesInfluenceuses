@@ -717,19 +717,16 @@ function renderAllTimeTable(list) {
               return `
                 <tr>
                   <td class="pos">${med}</td>
-                  <td class="name-cell">${p.nom}</td>
+                  <td class="name-cell">
+          ${p.nom}
+          <button onclick="showPlayerHistory('${p.nom}')" style="background:none;border:none;color:#aaa;font-size:15px;cursor:pointer;margin-left:6px;padding:0;">🔍</button>
+        </td>
                   <td style="font-size:12px">${p.emoji} ${p.league}</td>
                   <td>${p.atV}</td>
                   <td>${p.atN}</td>
                   <td>${p.atD}</td>
                   <td>${p.atVotes}</td>
                   <td><b>${p.atTotal}</b></td>
-                  <td>
-                    <button onclick="showPlayerHistory('${p.nom}')" 
-                            style="background:none; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px;">
-                      🔍
-                    </button>
-                  </td>
                 </tr>`;
             }).join('')}
           </tbody>
