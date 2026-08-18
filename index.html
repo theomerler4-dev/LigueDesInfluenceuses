@@ -257,6 +257,7 @@ let db = null;
 try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e){}
 
 const defaultData = {
+  allTimeStats: {},   // ← NOUVEAU : stockage permanent des stats All-Time
   ligues: [
     {nom:"Pré-saison",emoji:"⏳",participantes:[],matchs:[]},
     {nom:"Ligue 1",emoji:"🏆",participantes:[
@@ -465,27 +466,28 @@ setupPresence();
 
 function contactAdmin(){ tg.openTelegramLink('https://t.me/LDIAdmin'); }
 
-function resetCache(){
-  if(!confirm("⚠️ FIN DE SAISON ?\nStats → All-Time + suppression des matchs")) return;
-  data.ligues.forEach((l,i)=>{
-    if(i===0){l.matchs=[];return;}
-    l.participantes.forEach(p=>{
-      p.atV+=p.v; p.atN+=p.n; p.atD+=p.d; p.atVotes+=p.votes; p.atTotal+=p.total;
-      p.v=p.n=p.d=p.votes=p.total=0;
-    });
-    l.matchs=[];
-  });
-  votesFaits={}; save(); render();
-  tg.showPopup({title:"Nouvelle saison",message:"OK",buttons:[{type:"ok"}]});
-}
+function resetCache() {
+  if (!confirm("⚠️ FIN DE SAISON ?\nLes stats de la saison seront remises à zéro.\nLe classement All-Time est conservé.")) return;
 
-function resetAllTime(){
-  if(!confirm("Remettre All-Time à zéro ?")) return;
-  data.ligues.forEach((l,i)=>{
-    if(i===0) return;
-    l.participantes.forEach(p=>{p.atV=p.atN=p.atD=p.atVotes=p.atTotal=0;});
+  data.ligues.forEach((l, i) => {
+    if (i === 0) {
+      l.matchs = [];
+      return;
+    }
+    l.participantes.forEach(p => {
+      p.v = 0;
+      p.n = 0;
+      p.d = 0;
+      p.votes = 0;
+      p.total = 0;
+    });
+    l.matchs = [];
   });
-  save(); openAllTimeModal();
+
+  votesFaits = {};
+  save();
+  render();
+  tg.showPopup({ title: "Nouvelle saison", message: "Saison remise à zéro !\nAll-Time conservé.", buttons: [{ type: "ok" }] });
 }
 
 function getPhoto(p){ return (p.photo&&p.photo.startsWith('http'))?p.photo:`https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`; }
@@ -497,23 +499,44 @@ function getTimeLeft(c){
   return {text:`Il reste ${h}h ${m}min`,expired:false};
 }
 
-function processFinishedMatches(){
-  let ch=false;
-  data.ligues.forEach((l,idx)=>{
-    (l.matchs||[]).forEach(m=>{
-      if(m.finished || Date.now()<m.createdAt+DUREE_MATCH) return;
-      m.finished=true; ch=true;
-      if(idx===0) return;
-      const p1=l.participantes.find(p=>p.nom===m.p1);
-      const p2=l.participantes.find(p=>p.nom===m.p2);
-      if(!p1||!p2) return;
-      const v1=m.votesP1||0, v2=m.votesP2||0;
-      if(v1>v2){p1.v++;p1.total+=3;p2.d++;p1.atV++;p1.atTotal+=3;p2.atD++;}
-      else if(v2>v1){p2.v++;p2.total+=3;p1.d++;p2.atV++;p2.atTotal+=3;p1.atD++;}
-      else{p1.n++;p2.n++;p1.total++;p2.total++;p1.atN++;p2.atN++;p1.atTotal++;p2.atTotal++;}
+function processFinishedMatches() {
+  let changed = false;
+
+  data.ligues.forEach((l, idx) => {
+    (l.matchs || []).forEach(m => {
+      if (m.finished || Date.now() < m.createdAt + DUREE_MATCH) return;
+
+      m.finished = true;
+      changed = true;
+
+      // On ignore la Pré-saison pour les points
+      if (idx === 0) return;
+
+      const p1 = l.participantes.find(p => p.nom === m.p1);
+      const p2 = l.participantes.find(p => p.nom === m.p2);
+      if (!p1 || !p2) return;
+
+      const v1 = m.votesP1 || 0;
+      const v2 = m.votesP2 || 0;
+
+      // 1. Mise à jour des stats de la saison en cours
+      if (v1 > v2) {
+        p1.v += 1; p1.total += 3;
+        p2.d += 1;
+      } else if (v2 > v1) {
+        p2.v += 1; p2.total += 3;
+        p1.d += 1;
+      } else {
+        p1.n += 1; p2.n += 1;
+        p1.total += 1; p2.total += 1;
+      }
+
+      // 2. Mise à jour du vrai All-Time permanent (par nom)
+      updateAllTimeFromMatch(m.p1, m.p2, v1, v2);
     });
   });
-  if(ch) save();
+
+  if (changed) save();
 }
 
 function openMatchModal(){updateMatchSelects();document.getElementById('matchModal').classList.add('show');}
@@ -616,39 +639,86 @@ function openProfile(li,nom){
 }
 
 function openAllTimeModal() {
-  let all = [];
-  data.ligues.forEach((l, i) => {
-    if (i === 0) return;
-    l.participantes.forEach(p => {
-      if (p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???")) {
-        all.push({
-          ...p,
-          league: l.nom,
-          emoji: l.emoji
-        });
+  if (!data.allTimeStats) data.allTimeStats = {};
+
+  // On récupère toutes les stats All-Time enregistrées
+  let all = Object.keys(data.allTimeStats).map(nom => {
+    const stats = data.allTimeStats[nom];
+    
+    // On essaie de retrouver la ligue actuelle de la fille
+    let currentLeague = "Hors Ligue";
+    let emoji = "👤";
+    
+    for (let i = 1; i < data.ligues.length; i++) {
+      const found = data.ligues[i].participantes.find(p => p.nom === nom);
+      if (found) {
+        currentLeague = data.ligues[i].nom;
+        emoji = data.ligues[i].emoji;
+        break;
       }
-    });
+    }
+
+    return {
+      nom: nom,
+      league: currentLeague,
+      emoji: emoji,
+      atV: stats.atV || 0,
+      atN: stats.atN || 0,
+      atD: stats.atD || 0,
+      atVotes: stats.atVotes || 0,
+      atTotal: stats.atTotal || 0
+    };
   });
 
-  // Tri par points All-Time
+  // On enlève les ???
+  all = all.filter(p => p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???"));
+
+  // Tri
   all.sort((a, b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
 
-  // On ajoute le vrai classement (rank)
-  all = all.map((p, index) => ({
-    ...p,
-    rank: index + 1
-  }));
+  // On ajoute le vrai rang
+  all = all.map((p, index) => ({ ...p, rank: index + 1 }));
 
   window.allTimeList = all;
-
   renderAllTimeTable(all);
 
   document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
-  
-  // Reset de la recherche
+
   const searchInput = document.getElementById('alltimeSearch');
   if (searchInput) searchInput.value = '';
+}
+
+  // ====================== ALL-TIME PERMANENT ======================
+function getAllTimeStats(nom) {
+  if (!data.allTimeStats) data.allTimeStats = {};
+  if (!data.allTimeStats[nom]) {
+    data.allTimeStats[nom] = { atV: 0, atN: 0, atD: 0, atVotes: 0, atTotal: 0 };
+  }
+  return data.allTimeStats[nom];
+}
+
+function updateAllTimeFromMatch(p1Name, p2Name, votesP1, votesP2) {
+  const s1 = getAllTimeStats(p1Name);
+  const s2 = getAllTimeStats(p2Name);
+
+  if (votesP1 > votesP2) {
+    s1.atV += 1;
+    s1.atTotal += 3;
+    s2.atD += 1;
+  } else if (votesP2 > votesP1) {
+    s2.atV += 1;
+    s2.atTotal += 3;
+    s1.atD += 1;
+  } else {
+    s1.atN += 1;
+    s2.atN += 1;
+    s1.atTotal += 1;
+    s2.atTotal += 1;
+  }
+
+  s1.atVotes += votesP1;
+  s2.atVotes += votesP2;
 }
 
 function renderAllTimeTable(list) {
