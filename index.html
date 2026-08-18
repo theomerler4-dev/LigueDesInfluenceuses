@@ -194,10 +194,18 @@
       <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
     </div>
   </div>
- <!-- Modal All-Time -->
+<!-- Modal All-Time -->
 <div class="modal" id="alltimeModal">
   <div class="modal-content">
-    <div class="modal-title">🏆 Classement All-Time</div>
+    
+    <!-- Titre + Bouton Fermer en haut -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <div class="modal-title" style="margin:0;">🏆 Classement All-Time</div>
+      <button onclick="closeModals()" 
+              style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">
+        ✕
+      </button>
+    </div>
 
     <!-- Barre de recherche -->
     <div style="margin-bottom:16px;">
@@ -206,13 +214,18 @@
              oninput="searchAllTime()"
              style="width:100%; padding:13px 14px; border-radius:14px; border:1px solid #333; background:#252525; color:white; font-size:15px;">
     </div>
+
     <div id="alltimeContent"></div>
-      <div class="modal-actions" style="margin-top:20px;flex-direction:column;gap:10px">
-        <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c;color:white;display:none" onclick="resetAllTime()">🗑️ Remettre All-Time à zéro</button>
-        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
-      </div>
+
+    <!-- Bouton reset (admin) -->
+    <div class="modal-actions" style="margin-top:20px; flex-direction:column; gap:10px;">
+      <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c; color:white; display:none;" onclick="resetAllTime()">
+        🗑️ Remettre All-Time à zéro
+      </button>
     </div>
+
   </div>
+</div>
 
   <!-- Modal Profil -->
   <div class="modal" id="profileModal">
@@ -605,9 +618,8 @@ function openProfile(li,nom){
 function openAllTimeModal() {
   let all = [];
   data.ligues.forEach((l, i) => {
-    if (i === 0) return; // on ignore la Pré-saison
+    if (i === 0) return;
     l.participantes.forEach(p => {
-      // ← On exclut toutes celles qui s'appellent ???
       if (p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???")) {
         all.push({
           ...p,
@@ -621,13 +633,22 @@ function openAllTimeModal() {
   // Tri par points All-Time
   all.sort((a, b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
 
-  // On stocke la liste complète pour la recherche
+  // On ajoute le vrai classement (rank)
+  all = all.map((p, index) => ({
+    ...p,
+    rank: index + 1
+  }));
+
   window.allTimeList = all;
 
   renderAllTimeTable(all);
 
   document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
+  
+  // Reset de la recherche
+  const searchInput = document.getElementById('alltimeSearch');
+  if (searchInput) searchInput.value = '';
 }
 
 function renderAllTimeTable(list) {
@@ -652,8 +673,10 @@ function renderAllTimeTable(list) {
             </tr>
           </thead>
           <tbody>
-            ${list.map((p, i) => {
-              const med = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+            ${list.map((p) => {
+              // On utilise le vrai classement (rank)
+              const med = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : p.rank;
+              
               return `
                 <tr>
                   <td class="pos">${med}</td>
@@ -674,6 +697,22 @@ function renderAllTimeTable(list) {
   document.getElementById('alltimeContent').innerHTML = html;
 }
 
+function searchAllTime() {
+  const query = document.getElementById('alltimeSearch').value.trim().toLowerCase();
+  
+  if (!window.allTimeList) return;
+
+  if (query === '') {
+    renderAllTimeTable(window.allTimeList);
+    return;
+  }
+
+  const filtered = window.allTimeList.filter(p => 
+    p.nom.toLowerCase().includes(query)
+  );
+
+  renderAllTimeTable(filtered);
+}
 // Fonction de recherche
 function searchAllTime() {
   const query = document.getElementById('alltimeSearch').value.trim().toLowerCase();
