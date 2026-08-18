@@ -847,10 +847,47 @@ html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
       else{
         html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
         sorted.forEach((p,i)=>{
-          const pos=i+1; const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-          let nameClass = "name-cell";
-            let extra = "";
-          html+=`<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td><td>${p.v}</td><td>${p.n}</td><td>${p.d}</td><td>${p.votes}</td><td><b>${p.total}</b></td></tr>`;
+          const pos=i+1; 
+          const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+          
+          // ===== COULEURS + EMOJIS SELON LA LIGUE =====
+          let nameStyle = '';
+          let emoji = '';
+          const totalPlayers = sorted.length;
+
+          if (index === 1) { // Ligue 1
+            if (pos === 1) { nameStyle = 'color:#FFD700;font-weight:800;'; } // Or / Jaune
+            else if (pos === 2) { nameStyle = 'color:#C0C0C0;font-weight:800;'; } // Argent / Gris
+            else if (pos === 3) { nameStyle = 'color:#CD7F32;font-weight:800;'; } // Bronze / Marron
+            else if (pos === 17) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
+            else if (pos >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
+          }
+          else if (index === 2 || index === 3 || index === 4) { // Ligue 2, 3, 4
+            if (pos <= 3) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
+            else if (pos === 4) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
+            else if (pos === 17) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
+            else if (pos >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
+          }
+          else if (index === 5) { // Ligue 5
+            if (pos <= 3) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
+            else if (pos === 4) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
+            else if (pos === 15) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
+            else if (pos >= totalPlayers - 4) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
+          }
+          else if (index === 6) { // Ligue Ascension
+            if (pos <= 5) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
+            else if (pos === 6) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
+          }
+
+          html+=`<tr>
+            <td class="pos">${med}</td>
+            <td class="name-cell" style="${nameStyle}">${p.nom}${emoji}</td>
+            <td>${p.v}</td>
+            <td>${p.n}</td>
+            <td>${p.d}</td>
+            <td>${p.votes}</td>
+            <td><b>${p.total}</b></td>
+          </tr>`;
         });
         html+=`</tbody></table></div>`;
       }
