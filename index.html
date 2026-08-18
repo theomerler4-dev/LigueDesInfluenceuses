@@ -707,11 +707,11 @@ function renderAllTimeTable(list) {
               <th>D</th>
               <th>Votes</th>
               <th>Total</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             ${list.map((p) => {
-              // On utilise le vrai classement (rank)
               const med = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : p.rank;
               
               return `
@@ -724,6 +724,12 @@ function renderAllTimeTable(list) {
                   <td>${p.atD}</td>
                   <td>${p.atVotes}</td>
                   <td><b>${p.atTotal}</b></td>
+                  <td>
+                    <button onclick="showPlayerHistory('${p.nom}')" 
+                            style="background:none; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px;">
+                      🔍
+                    </button>
+                  </td>
                 </tr>`;
             }).join('')}
           </tbody>
@@ -768,6 +774,83 @@ function searchAllTime() {
   renderAllTimeTable(filtered);
 }
 
+function showPlayerHistory(nom) {
+  document.getElementById('historyTitle').textContent = `📜 Historique de ${nom}`;
+  const container = document.getElementById('historyContent');
+  container.innerHTML = '';
+
+  let allMatches = [];
+
+  // On récupère tous les matchs de toutes les ligues
+  data.ligues.forEach((ligue, li) => {
+    (ligue.matchs || []).forEach(m => {
+      if (m.p1 === nom || m.p2 === nom) {
+        allMatches.push({
+          ...m,
+          league: ligue.nom,
+          emoji: ligue.emoji
+        });
+      }
+    });
+  });
+
+  // Tri du plus récent au plus ancien
+  allMatches.sort((a, b) => b.createdAt - a.createdAt);
+
+  if (allMatches.length === 0) {
+    container.innerHTML = `<div class="empty">Aucun match trouvé pour ${nom}</div>`;
+  } else {
+    allMatches.forEach(m => {
+      const isP1 = m.p1 === nom;
+      const opponent = isP1 ? m.p2 : m.p1;
+      const myVotes = isP1 ? (m.votesP1 || 0) : (m.votesP2 || 0);
+      const oppVotes = isP1 ? (m.votesP2 || 0) : (m.votesP1 || 0);
+
+      let resultText = '';
+      let resultColor = '#aaa';
+
+      if (!m.finished) {
+        resultText = 'En cours';
+        resultColor = '#f1c40f';
+      } else if (myVotes > oppVotes) {
+        resultText = 'Victoire';
+        resultColor = '#2ecc71';
+      } else if (myVotes < oppVotes) {
+        resultText = 'Défaite';
+        resultColor = '#e74c3c';
+      } else {
+        resultText = 'Nul';
+        resultColor = '#f39c12';
+      }
+
+      const date = new Date(m.createdAt).toLocaleDateString('fr-FR');
+
+      container.innerHTML += `
+        <div style="background:#252525; border-radius:14px; padding:14px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-weight:600;">${m.title || 'Match'}</div>
+            <div style="font-size:12px; color:#888;">${date}</div>
+          </div>
+          <div style="font-size:13px; color:#ccc; margin-bottom:8px;">
+            ${m.emoji} ${m.league}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              vs <strong>${opponent}</strong>
+              <span style="color:#888; font-size:12px;"> (${myVotes} - ${oppVotes})</span>
+            </div>
+            <div style="color:${resultColor}; font-weight:700; font-size:14px;">
+              ${resultText === 'Victoire' ? '🟢' : resultText === 'Défaite' ? '🔴' : '🟡'} ${resultText}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  document.getElementById('historyModal').classList.add('show');
+}
+  
 function updateMatchSelects(){
   const li=+document.getElementById('matchLeague').value;
   const p1=document.getElementById('matchP1'), p2=document.getElementById('matchP2');
@@ -1130,6 +1213,18 @@ function transferParticipant() {
     buttons: [{type: "ok"}]
   });
 }
+  
+  <!-- Modal Historique d'une joueuse -->
+<div class="modal" id="historyModal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <div class="modal-title" style="margin:0;" id="historyTitle">Historique</div>
+      <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px;">✕</button>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+  
 </script>
 </body>
 </html>
