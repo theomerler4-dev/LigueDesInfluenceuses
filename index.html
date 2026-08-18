@@ -66,6 +66,7 @@
     .gallery-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#222}
     .gallery-empty{text-align:center;color:#777;padding:20px;font-size:14px}
     .profile-stats{text-align:center;background:#252525;border-radius:14px;padding:14px;margin-bottom:18px;font-size:14px;line-height:1.6}
+    .clickable-name{color:var(--pink);text-decoration:underline;cursor:pointer}
   </style>
 </head>
 <body>
@@ -90,9 +91,9 @@
   <div class="public-buttons">
     <button class="admin-btn btn-alltime" onclick="openAllTimeModal()">🏆</button>
     <button class="admin-btn" style="background:#9b59b6; position:relative;" onclick="openChatModal()">
-  💬
-  <span id="chatBadge" style="display:none; position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px;"></span>
-</button>
+      💬
+      <span id="chatBadge" style="display:none; position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px;"></span>
+    </button>
   </div>
 
   <div class="admin-buttons" id="adminButtons">
@@ -124,53 +125,47 @@
     </div>
   </div>
 
-  <!-- ========== MODAL CHAT ========== -->
-<div class="modal" id="chatModal">
-  <div class="modal-content" style="height:85vh;display:flex;flex-direction:column;">
-    <div class="modal-title">💬 Chat des Ligues</div>
-    
-    <div id="chatMessages" style="flex:1; overflow-y:auto; padding:12px 4px; margin-bottom:15px; display:flex; flex-direction:column; gap:12px; background:#111; border-radius:16px;"></div>
-    
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="chatInput" placeholder="Écris un message..." maxlength="200" 
-             style="flex:1;padding:13px 14px;border-radius:14px;border:1px solid #333;background:#252525;color:white;font-size:15px;">
-      <button onclick="sendChatMessage()" style="padding:0 18px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff0066,#ff2d78);color:white;font-weight:600;">➤</button>
-    </div>
-    
-    <div class="modal-actions" style="margin-top:12px;">
-      <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+  <!-- Modal Chat -->
+  <div class="modal" id="chatModal">
+    <div class="modal-content" style="height:85vh;display:flex;flex-direction:column;">
+      <div class="modal-title">💬 Chat des Ligues</div>
+      <div id="chatMessages" style="flex:1; overflow-y:auto; padding:12px 4px; margin-bottom:15px; display:flex; flex-direction:column; gap:12px; background:#111; border-radius:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="chatInput" placeholder="Écris un message..." maxlength="200" 
+               style="flex:1;padding:13px 14px;border-radius:14px;border:1px solid #333;background:#252525;color:white;font-size:15px;">
+        <button onclick="sendChatMessage()" style="padding:0 18px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff0066,#ff2d78);color:white;font-weight:600;">➤</button>
+      </div>
+      <div class="modal-actions" style="margin-top:12px;">
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ========== MODAL TRANSFERT ========== -->
-<div class="modal" id="transferModal">
-  <div class="modal-content">
-    <div class="modal-title">↕️ Transférer une influenceuse</div>
-    
-    <div class="form-group">
-      <label>Influenceuse</label>
-      <select id="transferSelect"></select>
-    </div>
-    
-    <div class="form-group">
-      <label>Nouvelle ligue</label>
-      <select id="transferLeague">
-        <option value="1">Ligue 1</option>
-        <option value="2">Ligue 2</option>
-        <option value="3">Ligue 3</option>
-        <option value="4">Ligue 4</option>
-        <option value="5">Ligue 5</option>
-        <option value="6">Ligue Ascension</option>
-      </select>
-    </div>
-    
-    <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModals()">Annuler</button>
-      <button class="btn btn-confirm" onclick="transferParticipant()">Transférer</button>
+  <!-- Modal Transfert -->
+  <div class="modal" id="transferModal">
+    <div class="modal-content">
+      <div class="modal-title">↕️ Transférer une influenceuse</div>
+      <div class="form-group">
+        <label>Influenceuse</label>
+        <select id="transferSelect"></select>
+      </div>
+      <div class="form-group">
+        <label>Nouvelle ligue</label>
+        <select id="transferLeague">
+          <option value="1">Ligue 1</option>
+          <option value="2">Ligue 2</option>
+          <option value="3">Ligue 3</option>
+          <option value="4">Ligue 4</option>
+          <option value="5">Ligue 5</option>
+          <option value="6">Ligue Ascension</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModals()">Annuler</button>
+        <button class="btn btn-confirm" onclick="transferParticipant()">Transférer</button>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- Modal Modifier -->
   <div class="modal" id="editModal">
@@ -197,38 +192,24 @@
       <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
     </div>
   </div>
-<!-- Modal All-Time -->
-<div class="modal" id="alltimeModal">
-  <div class="modal-content">
-    
-    <!-- Titre + Bouton Fermer en haut -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-      <div class="modal-title" style="margin:0;">🏆 Classement All-Time</div>
-      <button onclick="closeModals()" 
-              style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">
-        ✕
-      </button>
+
+  <!-- Modal All-Time -->
+  <div class="modal" id="alltimeModal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div class="modal-title" style="margin:0;">🏆 Classement All-Time</div>
+        <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <div style="margin-bottom:16px;">
+        <input type="text" id="alltimeSearch" placeholder="Rechercher une participante..." oninput="searchAllTime()"
+               style="width:100%; padding:13px 14px; border-radius:14px; border:1px solid #333; background:#252525; color:white; font-size:15px;">
+      </div>
+      <div id="alltimeContent"></div>
+      <div class="modal-actions" style="margin-top:20px; flex-direction:column; gap:10px;">
+        <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c; color:white; display:none;" onclick="resetAllTime()">🗑️ Remettre All-Time à zéro</button>
+      </div>
     </div>
-
-    <!-- Barre de recherche -->
-    <div style="margin-bottom:16px;">
-      <input type="text" id="alltimeSearch" 
-             placeholder="Rechercher une participante..." 
-             oninput="searchAllTime()"
-             style="width:100%; padding:13px 14px; border-radius:14px; border:1px solid #333; background:#252525; color:white; font-size:15px;">
-    </div>
-
-    <div id="alltimeContent"></div>
-
-    <!-- Bouton reset (admin) -->
-    <div class="modal-actions" style="margin-top:20px; flex-direction:column; gap:10px;">
-      <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c; color:white; display:none;" onclick="resetAllTime()">
-        🗑️ Remettre All-Time à zéro
-      </button>
-    </div>
-
   </div>
-</div>
 
   <!-- Modal Profil -->
   <div class="modal" id="profileModal">
@@ -239,6 +220,20 @@
       <div class="section-title">📅 Calendrier & Histoire</div>
       <div id="profileMatches"></div>
       <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
+    </div>
+  </div>
+
+  <!-- Modal Historique (NOUVEAU) -->
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div class="modal-title" style="margin:0;" id="historyTitle">📜 Historique</div>
+        <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <div id="historyContent"></div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+      </div>
     </div>
   </div>
 
@@ -404,7 +399,6 @@ let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
 let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV8')) || {};
 let isAdmin = false;
 
-// Normalisation
 data.ligues.forEach(l => {
   l.participantes = l.participantes || [];
   l.matchs = l.matchs || [];
@@ -474,12 +468,10 @@ let totalChatMessages = 0;
 
 function updateChatBadge() {
   if (!db) return;
-  
   db.ref('chat').once('value', snap => {
     totalChatMessages = snap.numChildren();
     const unread = Math.max(0, totalChatMessages - lastSeenChat);
     const badge = document.getElementById('chatBadge');
-    
     if (unread > 0) {
       badge.style.display = 'flex';
       badge.textContent = unread > 99 ? '99+' : unread;
@@ -488,20 +480,9 @@ function updateChatBadge() {
     }
   });
 }
-
-// On met à jour le badge régulièrement
 setInterval(updateChatBadge, 15000);
 updateChatBadge();
 
-// Quand on ouvre le chat, on marque comme lu
-const originalOpenChatModal = openChatModal;
-openChatModal = function() {
-  originalOpenChatModal();
-  lastSeenChat = totalChatMessages;
-  localStorage.setItem('lastSeenChat', lastSeenChat);
-  document.getElementById('chatBadge').style.display = 'none';
-};
-  
 function resetCache(){
   if(!confirm("⚠️ FIN DE SAISON ?\nStats → All-Time + suppression des matchs")) return;
   data.ligues.forEach((l,i)=>{
@@ -667,30 +648,18 @@ function openAllTimeModal() {
     });
   });
 
-  // Tri par points All-Time
   all.sort((a, b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
-
-  // On ajoute le vrai classement (rank)
-  all = all.map((p, index) => ({
-    ...p,
-    rank: index + 1
-  }));
-
+  all = all.map((p, index) => ({ ...p, rank: index + 1 }));
   window.allTimeList = all;
-
   renderAllTimeTable(all);
-
   document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
-  
-  // Reset de la recherche
   const searchInput = document.getElementById('alltimeSearch');
   if (searchInput) searchInput.value = '';
 }
 
 function renderAllTimeTable(list) {
   let html = '';
-
   if (list.length === 0) {
     html = `<div class="empty">Aucune participante trouvée</div>`;
   } else {
@@ -707,20 +676,17 @@ function renderAllTimeTable(list) {
               <th>D</th>
               <th>Votes</th>
               <th>Total</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
             ${list.map((p) => {
               const med = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : p.rank;
-              
               return `
                 <tr>
                   <td class="pos">${med}</td>
                   <td class="name-cell">
-          ${p.nom}
-          <button onclick="showPlayerHistory('${p.nom}')" style="background:none;border:none;color:#aaa;font-size:15px;cursor:pointer;margin-left:6px;padding:0;">🔍</button>
-        </td>
+                    <span class="clickable-name" onclick="showPlayerHistory('${p.nom}')">${p.nom}</span>
+                  </td>
                   <td style="font-size:12px">${p.emoji} ${p.league}</td>
                   <td>${p.atV}</td>
                   <td>${p.atN}</td>
@@ -733,41 +699,17 @@ function renderAllTimeTable(list) {
         </table>
       </div>`;
   }
-
   document.getElementById('alltimeContent').innerHTML = html;
 }
 
 function searchAllTime() {
   const query = document.getElementById('alltimeSearch').value.trim().toLowerCase();
-  
   if (!window.allTimeList) return;
-
   if (query === '') {
     renderAllTimeTable(window.allTimeList);
     return;
   }
-
-  const filtered = window.allTimeList.filter(p => 
-    p.nom.toLowerCase().includes(query)
-  );
-
-  renderAllTimeTable(filtered);
-}
-// Fonction de recherche
-function searchAllTime() {
-  const query = document.getElementById('alltimeSearch').value.trim().toLowerCase();
-  
-  if (!window.allTimeList) return;
-
-  if (query === '') {
-    renderAllTimeTable(window.allTimeList);
-    return;
-  }
-
-  const filtered = window.allTimeList.filter(p => 
-    p.nom.toLowerCase().includes(query)
-  );
-
+  const filtered = window.allTimeList.filter(p => p.nom.toLowerCase().includes(query));
   renderAllTimeTable(filtered);
 }
 
@@ -777,9 +719,7 @@ function showPlayerHistory(nom) {
   container.innerHTML = '';
 
   let allMatches = [];
-
-  // On récupère tous les matchs de toutes les ligues
-  data.ligues.forEach((ligue, li) => {
+  data.ligues.forEach((ligue) => {
     (ligue.matchs || []).forEach(m => {
       if (m.p1 === nom || m.p2 === nom) {
         allMatches.push({
@@ -791,7 +731,6 @@ function showPlayerHistory(nom) {
     });
   });
 
-  // Tri du plus récent au plus ancien
   allMatches.sort((a, b) => b.createdAt - a.createdAt);
 
   if (allMatches.length === 0) {
@@ -804,19 +743,24 @@ function showPlayerHistory(nom) {
       const oppVotes = isP1 ? (m.votesP2 || 0) : (m.votesP1 || 0);
 
       let resultText = '';
+      let resultEmoji = '';
       let resultColor = '#aaa';
 
       if (!m.finished) {
         resultText = 'En cours';
+        resultEmoji = '🟡';
         resultColor = '#f1c40f';
       } else if (myVotes > oppVotes) {
         resultText = 'Victoire';
+        resultEmoji = '🟢';
         resultColor = '#2ecc71';
       } else if (myVotes < oppVotes) {
         resultText = 'Défaite';
+        resultEmoji = '🔴';
         resultColor = '#e74c3c';
       } else {
         resultText = 'Nul';
+        resultEmoji = '🟡';
         resultColor = '#f39c12';
       }
 
@@ -837,7 +781,7 @@ function showPlayerHistory(nom) {
               <span style="color:#888; font-size:12px;"> (${myVotes} - ${oppVotes})</span>
             </div>
             <div style="color:${resultColor}; font-weight:700; font-size:14px;">
-              ${resultText === 'Victoire' ? '🟢' : resultText === 'Défaite' ? '🔴' : '🟡'} ${resultText}
+              ${resultEmoji} ${resultText}
             </div>
           </div>
         </div>
@@ -847,7 +791,7 @@ function showPlayerHistory(nom) {
 
   document.getElementById('historyModal').classList.add('show');
 }
-  
+
 function updateMatchSelects(){
   const li=+document.getElementById('matchLeague').value;
   const p1=document.getElementById('matchP1'), p2=document.getElementById('matchP2');
@@ -895,30 +839,28 @@ function render(){
     page.id=`page-${index}`;
     let html = '';
 
-// Message pour les Ligues 1 à 5
-if (index >= 1 && index <= 5) {
-  html += `
-    <div style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
-      <strong>📢 Information</strong><br><br>
-      Début de la ligue le <strong>21/08 à 22h</strong>.<br>
-      Échauffez-vous sur les matchs de pré-saison..
-    </div>
-  `;
-}
+    if (index >= 1 && index <= 5) {
+      html += `
+        <div style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
+          <strong>📢 Information</strong><br><br>
+          Début de la ligue le <strong>21/08 à 22h</strong>.<br>
+          Échauffez-vous sur les matchs de pré-saison..
+        </div>
+      `;
+    }
 
-// Message spécial pour la Ligue Ascension
-if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
-  html += `
-    <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
-      <strong>🚀 Ligue Ascension</strong><br><br>
-      La Ligue Ascension est une ligue qui permet à de nouvelles influenceuses de rejoindre les ligues supérieures.<br><br>
-      Pour ajouter la vôtre, cliquez sur le marteau en haut à gauche et envoyez le nom à un admin.<br><br>
-      <strong>La ligue commence à la J5 des autres ligues.</strong>
-    </div>
-  `;
-}
+    if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
+      html += `
+        <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
+          <strong>🚀 Ligue Ascension</strong><br><br>
+          La Ligue Ascension est une ligue qui permet à de nouvelles influenceuses de rejoindre les ligues supérieures.<br><br>
+          Pour ajouter la vôtre, cliquez sur le marteau en haut à gauche et envoyez le nom à un admin.<br><br>
+          <strong>La ligue commence à la J5 des autres ligues.</strong>
+        </div>
+      `;
+    }
 
-html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
+    html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
     if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
     else{
       ligue.matchs.forEach(m=>{
@@ -967,31 +909,30 @@ html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
           const pos=i+1; 
           const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
           
-          // ===== COULEURS + EMOJIS SELON LA LIGUE =====
           let nameStyle = '';
           let emoji = '';
           const totalPlayers = sorted.length;
 
-          if (index === 1) { // Ligue 1
-            if (pos === 1) { nameStyle = 'color:#FFD700;font-weight:800;'; } // Or / Jaune
-            else if (pos === 2) { nameStyle = 'color:#C0C0C0;font-weight:800;'; } // Argent / Gris
-            else if (pos === 3) { nameStyle = 'color:#CD7F32;font-weight:800;'; } // Bronze / Marron
+          if (index === 1) {
+            if (pos === 1) { nameStyle = 'color:#FFD700;font-weight:800;'; }
+            else if (pos === 2) { nameStyle = 'color:#C0C0C0;font-weight:800;'; }
+            else if (pos === 3) { nameStyle = 'color:#CD7F32;font-weight:800;'; }
             else if (pos === 17) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
             else if (pos >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
           }
-          else if (index === 2 || index === 3 || index === 4) { // Ligue 2, 3, 4
+          else if (index === 2 || index === 3 || index === 4) {
             if (pos <= 3) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
             else if (pos === 4) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
             else if (pos === 17) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
             else if (pos >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
           }
-          else if (index === 5) { // Ligue 5
+          else if (index === 5) {
             if (pos <= 3) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
             else if (pos === 4) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
             else if (pos === 15) { nameStyle = 'color:#f1948a;'; emoji = ' ⚡'; }
             else if (pos >= totalPlayers - 4) { nameStyle = 'color:#e74c3c;font-weight:700;'; emoji = ' ⬇️'; }
           }
-          else if (index === 6) { // Ligue Ascension
+          else if (index === 6) {
             if (pos <= 5) { nameStyle = 'color:#27ae60;font-weight:800;'; emoji = ' ⬆️'; }
             else if (pos === 6) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
           }
@@ -1039,40 +980,36 @@ function voter(li,nom,mid,c){
 
 setInterval(render,30000);
 render();
-// ==================== CHAT AMÉLIORÉ ====================
+
+// ==================== CHAT ====================
 let chatListener = null;
 
 function openChatModal() {
   document.getElementById('chatModal').classList.add('show');
   loadChatMessages();
+  lastSeenChat = totalChatMessages;
+  localStorage.setItem('lastSeenChat', lastSeenChat);
+  document.getElementById('chatBadge').style.display = 'none';
 }
 
 function loadChatMessages() {
   if (!db) return;
-
-  // On enlève l'ancien listener pour éviter les doublons
   if (chatListener) {
     db.ref('chat').off('value', chatListener);
   }
-
   chatListener = db.ref('chat').limitToLast(60).on('value', snap => {
     const box = document.getElementById('chatMessages');
     box.innerHTML = '';
-    
     const messages = [];
     snap.forEach(child => {
       messages.push({ id: child.key, ...child.val() });
     });
-
     messages.forEach(msg => {
       const isMe = msg.userId === (tg.initDataUnsafe?.user?.id || 0);
       const isAdminMsg = Number(msg.userId) === ADMIN_ID;
       const date = new Date(msg.time).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-
-      // Style différent pour l'admin
       let bubbleStyle = '';
       let nameStyle = '';
-      
       if (isAdminMsg) {
         bubbleStyle = `background: linear-gradient(135deg, #f1c40f, #f39c12); color: #000; font-weight: 600; border: 2px solid #f1c40f;`;
         nameStyle = `color: #f1c40f; font-weight: 700;`;
@@ -1081,7 +1018,6 @@ function loadChatMessages() {
       } else {
         bubbleStyle = `background: #252525;`;
       }
-
       box.innerHTML += `
         <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 82%; position: relative;">
           <div style="font-size: 11px; margin-bottom: 3px; ${isMe ? 'text-align:right' : ''}">
@@ -1091,10 +1027,8 @@ function loadChatMessages() {
             </span>
             <span style="color:#777"> • ${date}</span>
           </div>
-          
           <div style="${bubbleStyle} padding: 10px 14px; border-radius: 16px; font-size: 14px; word-break: break-word; position: relative;">
             ${msg.text}
-            
             ${isAdmin ? `
               <button onclick="deleteChatMessage('${msg.id}')" 
                 style="position:absolute; top:-8px; right:-8px; background:#e74c3c; border:none; color:white; 
@@ -1107,8 +1041,6 @@ function loadChatMessages() {
         </div>
       `;
     });
-
-    // Scroll automatique en bas
     box.scrollTop = box.scrollHeight;
   });
 }
@@ -1117,22 +1049,18 @@ function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text || !db) return;
-
   const user = tg.initDataUnsafe?.user;
-
   db.ref('chat').push({
     text: text,
     userId: user?.id || 0,
     userName: user?.first_name || 'Anonyme',
     time: Date.now()
   });
-
   input.value = '';
 }
 
 function deleteChatMessage(messageId) {
   if (!isAdmin) return;
-  
   tg.showPopup({
     title: "Supprimer ce message ?",
     message: "Cette action est irréversible",
@@ -1147,15 +1075,7 @@ function deleteChatMessage(messageId) {
   });
 }
 
-// Envoi avec la touche Entrée
 document.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && document.getElementById('chatModal').classList.contains('show')) {
-    sendChatMessage();
-  }
-});
-
-// Envoyer avec la touche Entrée
-document.addEventListener('keypress', e => {
   if (e.key === 'Enter' && document.getElementById('chatModal').classList.contains('show')) {
     sendChatMessage();
   }
@@ -1165,45 +1085,30 @@ document.addEventListener('keypress', e => {
 function openTransferModal() {
   const select = document.getElementById('transferSelect');
   select.innerHTML = '<option value="">-- Choisir une influenceuse --</option>';
-  
   data.ligues.forEach((l, li) => {
-    if (li === 0) return; // on ignore la pré-saison
+    if (li === 0) return;
     l.participantes.forEach((p, pi) => {
       select.innerHTML += `<option value="${li}|${pi}">${p.nom} (${l.nom})</option>`;
     });
   });
-  
   document.getElementById('transferModal').classList.add('show');
 }
 
 function transferParticipant() {
   const val = document.getElementById('transferSelect').value;
   const newLeague = parseInt(document.getElementById('transferLeague').value);
-  
   if (!val) return tg.showAlert("Choisis une influenceuse");
-  
   const [oldLi, pi] = val.split('|').map(Number);
-  
   if (oldLi === newLeague) return tg.showAlert("Elle est déjà dans cette ligue");
-  
-  // Récupérer la participante
   const participant = data.ligues[oldLi].participantes[pi];
-  
-  // Supprimer de l'ancienne ligue
   data.ligues[oldLi].participantes.splice(pi, 1);
-  
-  // Nettoyer les matchs de l'ancienne ligue qui la concernent
   data.ligues[oldLi].matchs = (data.ligues[oldLi].matchs || []).filter(m => 
     m.p1 !== participant.nom && m.p2 !== participant.nom
   );
-  
-  // Ajouter dans la nouvelle ligue
   data.ligues[newLeague].participantes.push(participant);
-  
   save();
   closeModals();
   render();
-  
   tg.showPopup({
     title: "Transfert réussi ↕️",
     message: `${participant.nom} est maintenant en ${data.ligues[newLeague].nom}`,
