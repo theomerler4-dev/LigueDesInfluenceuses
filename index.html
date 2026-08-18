@@ -9,122 +9,68 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    :root {
-      --bg: #0b0b0b;
-      --card: #161616;
-      --pink: #ff2d78;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-    body { background:var(--bg); color:white; height:100vh; overflow:hidden; }
-    .header { 
-      background:linear-gradient(135deg,#ff0066,#ff2d78); 
-      padding:14px 16px; 
-      text-align:center; 
-      font-size:18px; 
-      font-weight:700; 
-      position:sticky; 
-      top:0; 
-      z-index:100;
-      position: relative;
-    }
-    #onlineBadge {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px;
-      background: rgba(0,0,0,0.35);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    #dmAdminBtn {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,0.35);
-      border: none;
-      color: white;
-      font-size: 15px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .nav { display:flex; overflow-x:auto; background:#121212; border-bottom:1px solid #222; scrollbar-width:none; }
-    .nav::-webkit-scrollbar { display:none; }
-    .nav-btn { flex:0 0 auto; padding:13px 15px; background:none; border:none; color:#777; font-size:14px; font-weight:600; white-space:nowrap; position:relative; }
-    .nav-btn.active { color:var(--pink); }
-    .nav-btn.active::after { content:''; position:absolute; bottom:0; left:18%; right:18%; height:3px; background:var(--pink); border-radius:3px 3px 0 0; }
-    .content { height:calc(100vh - 102px); overflow-y:auto; padding:16px 12px 110px; }
-    .page { display:none; }
-    .page.active { display:block; }
-    .section-title { font-size:16px; font-weight:700; margin:4px 0 14px; }
-
-    .duel-card { background:#161616; border-radius:22px; padding:16px 14px 14px; margin-bottom:16px; border:1px solid #2a2a2a; }
-    .match-title { text-align:center; font-size:13px; color:#aaa; margin-bottom:6px; font-weight:500; }
-    .time-left { text-align:center; font-size:13px; color:var(--pink); margin-bottom:12px; font-weight:600; }
-    .time-left.expired { color:#e74c3c; }
-
-    .duel-players { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-    .player { flex:1; text-align:center; display:flex; flex-direction:column; align-items:center; }
-    .player-photo { width:84px; height:84px; border-radius:50%; object-fit:cover; border:3px solid #333; margin-bottom:8px; background:#222; cursor:pointer; }
-    .player-name { font-weight:700; font-size:15px; }
-    .player-name.clickable { color: var(--pink); text-decoration: underline; cursor: pointer; }
-    .player-votes { font-size:12px; color:var(--pink); margin-top:2px; }
-    .vs-circle { width:46px; height:46px; background:linear-gradient(135deg,#ff0066,#ff2d78); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; }
-
-    .vote-btns { display:flex; gap:8px; }
-    .vote-btn { flex:1; padding:12px 6px; border:none; border-radius:14px; background:#252525; color:white; font-weight:600; font-size:13px; }
-    .vote-btn:disabled { opacity:0.4; background:#1a1a1a; }
-
-    .table-wrapper { overflow-x:auto; border-radius:16px; border:1px solid #2a2a2a; background:#161616; }
-    table { width:100%; border-collapse:collapse; font-size:13px; min-width:340px; }
-    th { background:#1f1f1f; padding:11px 6px; text-align:center; color:#bbb; }
-    td { padding:11px 6px; text-align:center; border-bottom:1px solid #252525; }
-    .name-cell { text-align:left!important; padding-left:12px!important; font-weight:600; }
-    
-    .name-cell.promo { color: #2ecc71; }
-    .name-cell.promo-barrage { color: #82e0aa; }
-    .name-cell.releg { color: #e74c3c; }
-    .name-cell.releg-barrage { color: #f5b7b1; }
-    
-    .pos { color:var(--pink); font-weight:800; }
-    .empty { text-align:center; color:#666; padding:40px 20px; font-size:14px; line-height:1.5; }
-
-    .admin-buttons { position:fixed; bottom:22px; right:14px; display:none; flex-direction:column; gap:10px; z-index:200; }
-    .public-buttons { position:fixed; bottom:22px; left:14px; display:flex; flex-direction:column; gap:10px; z-index:200; }
-    .admin-btn { width:54px; height:54px; border-radius:50%; border:none; color:white; font-size:20px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
-    .btn-match { background:#2ecc71; }
-    .btn-reset { background:#e67e22; font-size:18px; }
-    .btn-alltime { background:linear-gradient(135deg,#3498db,#2980b9); }
-
-    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:300; align-items:flex-end; justify-content:center; }
-    .modal.show { display:flex; }
-    .modal-content { background:#1a1a1a; width:100%; max-width:420px; border-radius:24px 24px 0 0; padding:24px 20px 40px; max-height:85vh; overflow-y:auto; }
-    .modal-title { font-size:18px; font-weight:700; margin-bottom:18px; text-align:center; }
-    .form-group { margin-bottom:14px; }
-    .form-group label { display:block; font-size:13px; color:#aaa; margin-bottom:6px; }
-    .form-group select, .form-group input, .form-group textarea { width:100%; padding:13px 14px; border-radius:14px; border:1px solid #333; background:#252525; color:white; font-size:15px; }
-    .modal-actions { display:flex; gap:10px; margin-top:10px; }
-    .btn { flex:1; padding:14px; border:none; border-radius:14px; font-weight:600; font-size:15px; }
-    .btn-cancel { background:#333; color:white; }
-    .btn-confirm { background:linear-gradient(135deg,#ff0066,#ff2d78); color:white; }
-
-    .match-list-item { background:#252525; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:14px; }
-    .match-list-item button { background:#e74c3c; border:none; color:white; padding:6px 10px; border-radius:8px; font-size:12px; }
-
-    .gallery-main { width:100%; max-height:320px; object-fit:cover; border-radius:18px; margin-bottom:16px; background:#222; }
-    .gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-    .gallery-grid img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; background:#222; }
-    .gallery-empty { text-align:center; color:#777; padding:20px; font-size:14px; }
-    .profile-stats { text-align:center; background:#252525; border-radius:14px; padding:14px; margin-bottom:18px; font-size:14px; line-height:1.6; }
+    :root{--bg:#0b0b0b;--card:#161616;--pink:#ff2d78}
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+    body{background:var(--bg);color:white;height:100vh;overflow:hidden}
+    .header{background:linear-gradient(135deg,#ff0066,#ff2d78);padding:14px 16px;text-align:center;font-size:18px;font-weight:700;position:sticky;top:0;z-index:100;position:relative}
+    #onlineBadge{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;background:rgba(0,0,0,0.35);padding:4px 10px;border-radius:20px;font-weight:600}
+    #dmAdminBtn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.35);border:none;color:white;font-size:15px;padding:4px 10px;border-radius:20px;cursor:pointer;font-weight:600}
+    .nav{display:flex;overflow-x:auto;background:#121212;border-bottom:1px solid #222;scrollbar-width:none}
+    .nav::-webkit-scrollbar{display:none}
+    .nav-btn{flex:0 0 auto;padding:13px 15px;background:none;border:none;color:#777;font-size:14px;font-weight:600;white-space:nowrap;position:relative}
+    .nav-btn.active{color:var(--pink)}
+    .nav-btn.active::after{content:'';position:absolute;bottom:0;left:18%;right:18%;height:3px;background:var(--pink);border-radius:3px 3px 0 0}
+    .content{height:calc(100vh - 102px);overflow-y:auto;padding:16px 12px 110px}
+    .page{display:none}.page.active{display:block}
+    .section-title{font-size:16px;font-weight:700;margin:4px 0 14px}
+    .duel-card{background:#161616;border-radius:22px;padding:16px 14px 14px;margin-bottom:16px;border:1px solid #2a2a2a}
+    .match-title{text-align:center;font-size:13px;color:#aaa;margin-bottom:6px;font-weight:500}
+    .time-left{text-align:center;font-size:13px;color:var(--pink);margin-bottom:12px;font-weight:600}
+    .time-left.expired{color:#e74c3c}
+    .duel-players{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .player{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center}
+    .player-photo{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid #333;margin-bottom:8px;background:#222;cursor:pointer}
+    .player-name{font-weight:700;font-size:15px}
+    .player-name.clickable{color:var(--pink);text-decoration:underline;cursor:pointer}
+    .player-votes{font-size:12px;color:var(--pink);margin-top:2px}
+    .vs-circle{width:46px;height:46px;background:linear-gradient(135deg,#ff0066,#ff2d78);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+    .vote-btns{display:flex;gap:8px}
+    .vote-btn{flex:1;padding:12px 6px;border:none;border-radius:14px;background:#252525;color:white;font-weight:600;font-size:13px}
+    .vote-btn:disabled{opacity:0.4;background:#1a1a1a}
+    .table-wrapper{overflow-x:auto;border-radius:16px;border:1px solid #2a2a2a;background:#161616}
+    table{width:100%;border-collapse:collapse;font-size:13px;min-width:340px}
+    th{background:#1f1f1f;padding:11px 6px;text-align:center;color:#bbb}
+    td{padding:11px 6px;text-align:center;border-bottom:1px solid #252525}
+    .name-cell{text-align:left!important;padding-left:12px!important;font-weight:600}
+    .pos{color:var(--pink);font-weight:800}
+    .empty{text-align:center;color:#666;padding:40px 20px;font-size:14px;line-height:1.5}
+    .admin-buttons{position:fixed;bottom:22px;right:14px;display:none;flex-direction:column;gap:10px;z-index:200}
+    .public-buttons{position:fixed;bottom:22px;left:14px;display:flex;flex-direction:column;gap:10px;z-index:200}
+    .admin-btn{width:54px;height:54px;border-radius:50%;border:none;color:white;font-size:20px;box-shadow:0 6px 18px rgba(0,0,0,0.4)}
+    .btn-match{background:#2ecc71}.btn-reset{background:#e67e22;font-size:18px}
+    .btn-alltime{background:linear-gradient(135deg,#3498db,#2980b9)}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:300;align-items:flex-end;justify-content:center}
+    .modal.show{display:flex}
+    .modal-content{background:#1a1a1a;width:100%;max-width:420px;border-radius:24px 24px 0 0;padding:24px 20px 40px;max-height:85vh;overflow-y:auto}
+    .modal-title{font-size:18px;font-weight:700;margin-bottom:18px;text-align:center}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:13px;color:#aaa;margin-bottom:6px}
+    .form-group select,.form-group input,.form-group textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid #333;background:#252525;color:white;font-size:15px}
+    .modal-actions{display:flex;gap:10px;margin-top:10px}
+    .btn{flex:1;padding:14px;border:none;border-radius:14px;font-weight:600;font-size:15px}
+    .btn-cancel{background:#333;color:white}.btn-confirm{background:linear-gradient(135deg,#ff0066,#ff2d78);color:white}
+    .match-list-item{background:#252525;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+    .match-list-item button{background:#e74c3c;border:none;color:white;padding:6px 10px;border-radius:8px;font-size:12px}
+    .gallery-main{width:100%;max-height:320px;object-fit:cover;border-radius:18px;margin-bottom:16px;background:#222}
+    .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .gallery-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#222}
+    .gallery-empty{text-align:center;color:#777;padding:20px;font-size:14px}
+    .profile-stats{text-align:center;background:#252525;border-radius:14px;padding:14px;margin-bottom:18px;font-size:14px;line-height:1.6}
   </style>
 </head>
 <body>
   <div class="header">
-    <button id="dmAdminBtn" onclick="contactAdmin()" title="Contacter l'admin">💬</button>
+    <button id="dmAdminBtn" onclick="contactAdmin()">💬</button>
     👑 Ligue des Influenceuses
     <div id="onlineBadge">👥 --</div>
   </div>
@@ -142,13 +88,13 @@
   <div class="content" id="content"></div>
 
   <div class="public-buttons">
-    <button class="admin-btn btn-alltime" onclick="openAllTimeModal()" title="Classement All-Time">🏆</button>
+    <button class="admin-btn btn-alltime" onclick="openAllTimeModal()">🏆</button>
   </div>
 
   <div class="admin-buttons" id="adminButtons">
-    <button class="admin-btn btn-reset" onclick="resetCache()" title="Fin de saison">🔄</button>
+    <button class="admin-btn btn-reset" onclick="resetCache()">🔄</button>
     <button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
-    <button class="admin-btn" style="background:#9b59b6;" onclick="openEditModal()" title="Modifier une participante">✏️</button>
+    <button class="admin-btn" style="background:#9b59b6" onclick="openEditModal()">✏️</button>
   </div>
 
   <!-- Modal Match -->
@@ -158,49 +104,29 @@
       <div class="form-group">
         <label>Ligue</label>
         <select id="matchLeague" onchange="updateMatchSelects()">
-          <option value="0">Pré-saison</option>
-          <option value="1">Ligue 1</option>
-          <option value="2">Ligue 2</option>
-          <option value="3">Ligue 3</option>
-          <option value="4">Ligue 4</option>
-          <option value="5">Ligue 5</option>
-          <option value="6">Ligue Ascension</option>
+          <option value="0">Pré-saison</option><option value="1">Ligue 1</option><option value="2">Ligue 2</option>
+          <option value="3">Ligue 3</option><option value="4">Ligue 4</option><option value="5">Ligue 5</option><option value="6">Ascension</option>
         </select>
       </div>
-      <div class="form-group"><label>Titre du match</label><input type="text" id="matchTitle" placeholder="Ex: Match de pré-saison"></div>
+      <div class="form-group"><label>Titre</label><input type="text" id="matchTitle" placeholder="Ex: Journée 1"></div>
       <div class="form-group"><label>Participante 1</label><select id="matchP1"></select></div>
       <div class="form-group"><label>Participante 2</label><select id="matchP2"></select></div>
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModals()">Fermer</button>
-        <button class="btn btn-confirm" onclick="ajouterMatch()">Ajouter le match</button>
+        <button class="btn btn-confirm" onclick="ajouterMatch()">Ajouter</button>
       </div>
-      <div style="margin-top:20px;">
-        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Matchs actuels :</div>
-        <div id="currentMatchesList"></div>
-      </div>
+      <div style="margin-top:20px"><div style="font-size:14px;font-weight:600;margin-bottom:10px">Matchs actuels :</div><div id="currentMatchesList"></div></div>
     </div>
   </div>
 
-  <!-- Modal Modifier Participante -->
+  <!-- Modal Modifier -->
   <div class="modal" id="editModal">
     <div class="modal-content">
       <div class="modal-title">✏️ Modifier une participante</div>
-      <div class="form-group">
-        <label>Choisir la participante</label>
-        <select id="editSelect" onchange="loadParticipantToEdit()"></select>
-      </div>
-      <div class="form-group">
-        <label>Nom</label>
-        <input type="text" id="editName" maxlength="20" placeholder="Nom">
-      </div>
-      <div class="form-group">
-        <label>Photo principale (lien)</label>
-        <input type="url" id="editPhoto" placeholder="https://...">
-      </div>
-      <div class="form-group">
-        <label>Galerie (une URL par ligne)</label>
-        <textarea id="editGallery" rows="5" placeholder="https://photo1.jpg&#10;https://photo2.jpg&#10;https://photo3.jpg"></textarea>
-      </div>
+      <div class="form-group"><label>Choisir</label><select id="editSelect" onchange="loadParticipantToEdit()"></select></div>
+      <div class="form-group"><label>Nom</label><input type="text" id="editName" maxlength="20"></div>
+      <div class="form-group"><label>Photo principale (URL)</label><input type="url" id="editPhoto" placeholder="https://..."></div>
+      <div class="form-group"><label>Galerie (une URL par ligne)</label><textarea id="editGallery" rows="5" placeholder="https://photo1.jpg&#10;https://photo2.jpg"></textarea></div>
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModals()">Annuler</button>
         <button class="btn btn-confirm" onclick="saveParticipantEdit()">Enregistrer</button>
@@ -212,25 +138,21 @@
   <div class="modal" id="galleryModal">
     <div class="modal-content">
       <div class="modal-title" id="galleryTitle">Photos</div>
-      <img id="galleryMainPhoto" class="gallery-main" src="" alt="">
+      <img id="galleryMainPhoto" class="gallery-main" src="">
       <div id="galleryGrid" class="gallery-grid"></div>
-      <div id="galleryEmpty" class="gallery-empty" style="display:none;">Aucune photo supplémentaire</div>
-      <div class="modal-actions" style="margin-top:20px;">
-        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
-      </div>
+      <div id="galleryEmpty" class="gallery-empty" style="display:none">Aucune photo supplémentaire</div>
+      <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
     </div>
   </div>
 
-  <!-- Modal Classement All-Time -->
+  <!-- Modal All-Time -->
   <div class="modal" id="alltimeModal">
     <div class="modal-content">
-      <div class="modal-title">🏆 Classement All-Time (depuis Saison 1)</div>
+      <div class="modal-title">🏆 Classement All-Time</div>
       <div id="alltimeContent"></div>
-      <div class="modal-actions" style="margin-top:20px; flex-direction:column; gap:10px;">
-        <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c; color:white; display:none;" onclick="resetAllTime()">
-          🗑️ Remettre All-Time à zéro
-        </button>
-        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
+      <div class="modal-actions" style="margin-top:20px;flex-direction:column;gap:10px">
+        <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c;color:white;display:none" onclick="resetAllTime()">🗑️ Remettre All-Time à zéro</button>
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
       </div>
     </div>
   </div>
@@ -239,509 +161,539 @@
   <div class="modal" id="profileModal">
     <div class="modal-content">
       <div class="modal-title" id="profileTitle">Profil</div>
-      <img id="profilePhoto" class="gallery-main" src="" alt="">
+      <img id="profilePhoto" class="gallery-main" src="">
       <div id="profileStats" class="profile-stats"></div>
-      <div class="section-title">📅 Calendrier & Histoire de la saison</div>
+      <div class="section-title">📅 Calendrier & Histoire</div>
       <div id="profileMatches"></div>
-      <div class="modal-actions" style="margin-top:20px;">
-        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1;">Fermer</button>
-      </div>
+      <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
     </div>
   </div>
 
-  <script>
-    const ADMIN_ID = 8994516214;
-    const DUREE_MATCH = 24 * 60 * 60 * 1000;
+<script>
+const ADMIN_ID = 8994516214;
+const DUREE_MATCH = 24*60*60*1000;
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCQySJP8mzLPU0Ex8bOnY4ZSGXBBKAR4i8",
-      authDomain: "liguesdesinfluenceuses.firebaseapp.com",
-      databaseURL: "https://liguesdesinfluenceuses-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "liguesdesinfluenceuses",
-      storageBucket: "liguesdesinfluenceuses.firebasestorage.app",
-      messagingSenderId: "1008701028009",
-      appId: "1:1008701028009:web:0ed95759576ce589395bb8"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyCQySJP8mzLPU0Ex8bOnY4ZSGXBBKAR4i8",
+  authDomain: "liguesdesinfluenceuses.firebaseapp.com",
+  databaseURL: "https://liguesdesinfluenceuses-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "liguesdesinfluenceuses",
+  storageBucket: "liguesdesinfluenceuses.firebasestorage.app",
+  messagingSenderId: "1008701028009",
+  appId: "1:1008701028009:web:0ed95759576ce589395bb8"
+};
 
-    let db = null;
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-    } catch (e) {}
+let db = null;
+try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e){}
 
-    const defaultData = {
-      ligues: [
-        { nom: "Pré-saison", emoji: "⏳", participantes: [], matchs: [] },
-        { nom: "Ligue 1", emoji: "🏆", participantes: [], matchs: [] },
-        { nom: "Ligue 2", emoji: "🥈", participantes: [], matchs: [] },
-        { nom: "Ligue 3", emoji: "🥉", participantes: [], matchs: [] },
-        { nom: "Ligue 4", emoji: "⭐", participantes: [], matchs: [] },
-        { nom: "Ligue 5", emoji: "🌟", participantes: [], matchs: [] },
-        { nom: "Ligue Ascension", emoji: "🚀", participantes: [], matchs: [] }
-      ]
-    };
+const defaultData = {
+  ligues: [
+    {nom:"Pré-saison",emoji:"⏳",participantes:[],matchs:[]},
+    {nom:"Ligue 1",emoji:"🏆",participantes:[
+      {nom:"Léa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Manon",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Chloé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Emma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Jade",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Inès",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lola",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Sarah",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Clara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Zoé",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Alice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Louise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Mia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Nina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Eva",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Sofia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lina",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Ambre",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Rose",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Julia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]},
+    {nom:"Ligue 2",emoji:"🥈",participantes:[
+      {nom:"Camille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Léonie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Apolline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Capucine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Diane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Élise",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Fanny",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Garance",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Héloïse",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Justine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Kenza",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lilou",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Margaux",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Océane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Pauline",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Romane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Solène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Thaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Victoire",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Yasmine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]},
+    {nom:"Ligue 3",emoji:"🥉",participantes:[
+      {nom:"Alicia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Bianca",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Célia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Daphné",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Elena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Flora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Giulia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Hanna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Isis",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Juliette",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Kim",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Mélissa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Nora",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Olivia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Pénélope",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Quitterie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Roxane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Sienna",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Talia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]},
+    {nom:"Ligue 4",emoji:"⭐",participantes:[
+      {nom:"Anaïs",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Bonnie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Candice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Delphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Estelle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Fleur",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Gabrielle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Hortense",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Ingrid",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Jeanne",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Karine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Laure",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Maëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Noémie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Ophélie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Priscille",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Rosalie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Sylvie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Tiffany",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Valentine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]},
+    {nom:"Ligue 5",emoji:"🌟",participantes:[
+      {nom:"Aurore",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Bérénice",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Cécile",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Désirée",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Élodie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Frédérique",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Gwenaëlle",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Hermine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Irène",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Joséphine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Katia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lucie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Morgane",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Nadège",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Ornella",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Perrine",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Stéphanie",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Tatiana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Ursula",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]},
+    {nom:"Ligue Ascension",emoji:"🚀",participantes:[
+      {nom:"Maya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Noa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Elya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Iris",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Lana",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Mila",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Nova",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Pia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Romy",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Sia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Tia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Uma",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Vita",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Willa",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Xena",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Yara",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Zia",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Alya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Baya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
+      {nom:"Cira",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
+    ],matchs:[]}
+  ]
+};
 
-    // Nettoyage au cas où
-    localStorage.removeItem('ligueDataV7');
-    localStorage.removeItem('votesFaitsV7');
+localStorage.removeItem('ligueDataV7');
+localStorage.removeItem('votesFaitsV7');
 
-    let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
-    let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV8')) || {};
-    let isAdmin = false;
+let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
+let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV8')) || {};
+let isAdmin = false;
 
-    // Normalisation
-    if (!data.ligues[0] || data.ligues[0].nom !== "Pré-saison") {
-      data.ligues.unshift({ nom: "Pré-saison", emoji: "⏳", participantes: [], matchs: [] });
+// Normalisation
+data.ligues.forEach(l => {
+  l.participantes = l.participantes || [];
+  l.matchs = l.matchs || [];
+  l.participantes.forEach(p => {
+    p.gallery = p.gallery || [];
+    p.v=p.v||0; p.n=p.n||0; p.d=p.d||0; p.votes=p.votes||0; p.total=p.total||0;
+    p.atV=p.atV||0; p.atN=p.atN||0; p.atD=p.atD||0; p.atVotes=p.atVotes||0; p.atTotal=p.atTotal||0;
+  });
+});
+
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+tg.setHeaderColor('#ff0066'); tg.setBackgroundColor('#0b0b0b');
+
+setTimeout(() => {
+  const u = tg.initDataUnsafe?.user;
+  if (u && Number(u.id) === ADMIN_ID) {
+    isAdmin = true;
+    document.getElementById('adminButtons').style.display = 'flex';
+  }
+}, 400);
+
+function save() {
+  localStorage.setItem('ligueDataV8', JSON.stringify(data));
+  localStorage.setItem('votesFaitsV8', JSON.stringify(votesFaits));
+  if (db) db.ref('ligueData').set(data);
+}
+
+if (db) {
+  db.ref('ligueData').on('value', snap => {
+    const val = snap.val();
+    if (val) {
+      data = val;
+      data.ligues.forEach(l => {
+        l.participantes = l.participantes || [];
+        l.matchs = l.matchs || [];
+        l.participantes.forEach(p => {
+          p.gallery = p.gallery || [];
+          p.atV=p.atV||0; p.atN=p.atN||0; p.atD=p.atD||0; p.atVotes=p.atVotes||0; p.atTotal=p.atTotal||0;
+        });
+      });
+      render();
     }
-    data.ligues.forEach(l => {
-      l.participantes = l.participantes || [];
-      l.matchs = l.matchs || [];
-      l.participantes.forEach(p => {
-        p.gallery = p.gallery || [];
-        p.v = p.v || 0; p.n = p.n || 0; p.d = p.d || 0;
-        p.votes = p.votes || 0; p.total = p.total || 0;
-        p.atV = p.atV || 0; p.atN = p.atN || 0; p.atD = p.atD || 0;
-        p.atVotes = p.atVotes || 0; p.atTotal = p.atTotal || 0;
+  });
+}
+
+function setupPresence() {
+  if (!db) return;
+  const user = tg.initDataUnsafe?.user;
+  if (!user?.id) return;
+  const ref = db.ref('online/' + user.id);
+  const set = () => ref.set({lastSeen: firebase.database.ServerValue.TIMESTAMP});
+  set();
+  ref.onDisconnect().remove();
+  setInterval(set, 25000);
+  db.ref('online').on('value', s => {
+    document.getElementById('onlineBadge').textContent = `👥 ${s.numChildren()}`;
+  });
+}
+setupPresence();
+
+function contactAdmin(){ tg.openTelegramLink('https://t.me/LDIAdmin'); }
+
+function resetCache(){
+  if(!confirm("⚠️ FIN DE SAISON ?\nStats → All-Time + suppression des matchs")) return;
+  data.ligues.forEach((l,i)=>{
+    if(i===0){l.matchs=[];return;}
+    l.participantes.forEach(p=>{
+      p.atV+=p.v; p.atN+=p.n; p.atD+=p.d; p.atVotes+=p.votes; p.atTotal+=p.total;
+      p.v=p.n=p.d=p.votes=p.total=0;
+    });
+    l.matchs=[];
+  });
+  votesFaits={}; save(); render();
+  tg.showPopup({title:"Nouvelle saison",message:"OK",buttons:[{type:"ok"}]});
+}
+
+function resetAllTime(){
+  if(!confirm("Remettre All-Time à zéro ?")) return;
+  data.ligues.forEach((l,i)=>{
+    if(i===0) return;
+    l.participantes.forEach(p=>{p.atV=p.atN=p.atD=p.atVotes=p.atTotal=0;});
+  });
+  save(); openAllTimeModal();
+}
+
+function getPhoto(p){ return (p.photo&&p.photo.startsWith('http'))?p.photo:`https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`; }
+
+function getTimeLeft(c){
+  const r = (c + DUREE_MATCH) - Date.now();
+  if(r<=0) return {text:"Match terminé",expired:true};
+  const h=Math.floor(r/3600000), m=Math.floor((r%3600000)/60000);
+  return {text:`Il reste ${h}h ${m}min`,expired:false};
+}
+
+function processFinishedMatches(){
+  let ch=false;
+  data.ligues.forEach((l,idx)=>{
+    (l.matchs||[]).forEach(m=>{
+      if(m.finished || Date.now()<m.createdAt+DUREE_MATCH) return;
+      m.finished=true; ch=true;
+      if(idx===0) return;
+      const p1=l.participantes.find(p=>p.nom===m.p1);
+      const p2=l.participantes.find(p=>p.nom===m.p2);
+      if(!p1||!p2) return;
+      const v1=m.votesP1||0, v2=m.votesP2||0;
+      if(v1>v2){p1.v++;p1.total+=3;p2.d++;p1.atV++;p1.atTotal+=3;p2.atD++;}
+      else if(v2>v1){p2.v++;p2.total+=3;p1.d++;p2.atV++;p2.atTotal+=3;p1.atD++;}
+      else{p1.n++;p2.n++;p1.total++;p2.total++;p1.atN++;p2.atN++;p1.atTotal++;p2.atTotal++;}
+    });
+  });
+  if(ch) save();
+}
+
+function openMatchModal(){updateMatchSelects();document.getElementById('matchModal').classList.add('show');}
+function closeModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'));}
+
+function openEditModal(){
+  const s=document.getElementById('editSelect');
+  s.innerHTML='<option value="">-- Choisir --</option>';
+  data.ligues.forEach((l,li)=>{
+    if(li===0) return;
+    l.participantes.forEach((p,pi)=>{
+      s.innerHTML+=`<option value="${li}|${pi}">${p.nom} (${l.nom})</option>`;
+    });
+  });
+  document.getElementById('editName').value='';
+  document.getElementById('editPhoto').value='';
+  document.getElementById('editGallery').value='';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function loadParticipantToEdit(){
+  const v=document.getElementById('editSelect').value;
+  if(!v) return;
+  const [li,pi]=v.split('|').map(Number);
+  const p=data.ligues[li].participantes[pi];
+  document.getElementById('editName').value=p.nom||'';
+  document.getElementById('editPhoto').value=p.photo||'';
+  document.getElementById('editGallery').value=(p.gallery||[]).join('\n');
+}
+
+function saveParticipantEdit(){
+  const v=document.getElementById('editSelect').value;
+  if(!v) return tg.showAlert("Choisis une participante");
+  const [li,pi]=v.split('|').map(Number);
+  const p=data.ligues[li].participantes[pi];
+  const newName=document.getElementById('editName').value.trim();
+  const newPhoto=document.getElementById('editPhoto').value.trim();
+  const gal=document.getElementById('editGallery').value.trim();
+  if(!newName) return tg.showAlert("Nom obligatoire");
+
+  const old=p.nom;
+  if(old!==newName){
+    data.ligues.forEach(l=>{
+      (l.matchs||[]).forEach(m=>{
+        if(m.p1===old) m.p1=newName;
+        if(m.p2===old) m.p2=newName;
       });
     });
+  }
+  p.nom=newName;
+  p.photo=newPhoto;
+  p.gallery=gal?gal.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')):[];
+  save(); closeModals(); render();
+  tg.showPopup({title:"Enregistré ✅",message:`${newName} mise à jour`,buttons:[{type:"ok"}]});
+}
 
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    tg.setHeaderColor('#ff0066');
-    tg.setBackgroundColor('#0b0b0b');
+function openGallery(li,nom){
+  let p=null;
+  if(li===0){for(let i=1;i<data.ligues.length;i++){p=data.ligues[i].participantes.find(x=>x.nom===nom);if(p)break;}}
+  else p=data.ligues[li].participantes.find(x=>x.nom===nom);
+  if(!p) return;
+  document.getElementById('galleryTitle').textContent=`📸 ${p.nom}`;
+  document.getElementById('galleryMainPhoto').src=getPhoto(p);
+  const g=document.getElementById('galleryGrid'), e=document.getElementById('galleryEmpty');
+  g.innerHTML='';
+  const gal=p.gallery||[];
+  if(!gal.length){e.style.display='block';g.style.display='none';}
+  else{e.style.display='none';g.style.display='grid';gal.forEach(u=>{if(u.startsWith('http'))g.innerHTML+=`<img src="${u}" loading="lazy">`;});}
+  document.getElementById('galleryModal').classList.add('show');
+}
 
-    setTimeout(() => {
-      const user = tg.initDataUnsafe?.user;
-      if (user && Number(user.id) === ADMIN_ID) {
-        isAdmin = true;
-        document.getElementById('adminButtons').style.display = 'flex';
+function openProfile(li,nom){
+  let p=null, real=li;
+  if(li===0){for(let i=1;i<data.ligues.length;i++){p=data.ligues[i].participantes.find(x=>x.nom===nom);if(p){real=i;break;}}}
+  else p=data.ligues[li].participantes.find(x=>x.nom===nom);
+  if(!p) return;
+  document.getElementById('profileTitle').textContent=`👤 ${p.nom}`;
+  document.getElementById('profilePhoto').src=getPhoto(p);
+  document.getElementById('profileStats').innerHTML=`
+    <div><strong>Saison en cours</strong></div>
+    <div>V: ${p.v} | N: ${p.n} | D: ${p.d}</div>
+    <div>Votes: ${p.votes} | Points: <b>${p.total}</b></div>
+    <div style="margin-top:8px;font-size:12px;color:#aaa">All-Time: ${p.atTotal} pts</div>`;
+  const div=document.getElementById('profileMatches');
+  div.innerHTML='';
+  const ms=(data.ligues[real].matchs||[]).filter(m=>m.p1===nom||m.p2===nom);
+  if(!ms.length) div.innerHTML='<div class="empty">Aucun match</div>';
+  else ms.sort((a,b)=>b.createdAt-a.createdAt).forEach(m=>{
+    const opp=m.p1===nom?m.p2:m.p1;
+    const t=getTimeLeft(m.createdAt);
+    let res=t.text;
+    if(m.finished){
+      const v1=m.votesP1||0,v2=m.votesP2||0;
+      const my=m.p1===nom?v1:v2, op=m.p1===nom?v2:v1;
+      res=my>op?`Victoire (${my}-${op})`:my<op?`Défaite (${my}-${op})`:`Nul (${my}-${op})`;
+    }
+    div.innerHTML+=`<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Match'} vs ${opp}</div><div style="font-size:12px;color:#aaa">${res}</div></div></div>`;
+  });
+  document.getElementById('profileModal').classList.add('show');
+}
+
+function openAllTimeModal(){
+  let all=[];
+  data.ligues.forEach((l,i)=>{if(i===0)return;l.participantes.forEach(p=>all.push({...p,league:l.nom,emoji:l.emoji}));});
+  all.sort((a,b)=>b.atTotal-a.atTotal||b.atVotes-a.atVotes);
+  let html=all.length===0?'<div class="empty">Aucune donnée</div>':`
+    <div class="table-wrapper"><table><thead><tr>
+      <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>Ligue</th>
+      <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
+    </tr></thead><tbody>
+    ${all.map((p,i)=>{
+      const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+      return `<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td>
+        <td style="font-size:12px">${p.emoji} ${p.league}</td>
+        <td>${p.atV}</td><td>${p.atN}</td><td>${p.atD}</td>
+        <td>${p.atVotes}</td><td><b>${p.atTotal}</b></td></tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  document.getElementById('alltimeContent').innerHTML=html;
+  document.getElementById('resetAllTimeBtn').style.display=isAdmin?'block':'none';
+  document.getElementById('alltimeModal').classList.add('show');
+}
+
+function updateMatchSelects(){
+  const li=+document.getElementById('matchLeague').value;
+  const p1=document.getElementById('matchP1'), p2=document.getElementById('matchP2');
+  p1.innerHTML=p2.innerHTML='';
+  if(li===0){
+    data.ligues.forEach((l,i)=>{if(i===0)return;l.participantes.forEach(p=>{
+      p1.innerHTML+=`<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
+      p2.innerHTML+=`<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
+    });});
+  }else{
+    data.ligues[li].participantes.forEach(p=>{
+      p1.innerHTML+=`<option value="${p.nom}">${p.nom}</option>`;
+      p2.innerHTML+=`<option value="${p.nom}">${p.nom}</option>`;
+    });
+  }
+  const list=document.getElementById('currentMatchesList');
+  list.innerHTML='';
+  (data.ligues[li].matchs||[]).forEach((m,i)=>{
+    const t=getTimeLeft(m.createdAt);
+    list.innerHTML+=`<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Sans titre'}</div><div>${m.p1} vs ${m.p2}</div><div style="font-size:12px;color:${t.expired?'#e74c3c':'#aaa'}">${t.text}</div></div><button onclick="supprimerMatch(${li},${i})">Suppr</button></div>`;
+  });
+}
+
+function ajouterMatch(){
+  const li=+document.getElementById('matchLeague').value;
+  const title=document.getElementById('matchTitle').value.trim()||"Match";
+  const p1=document.getElementById('matchP1').value;
+  const p2=document.getElementById('matchP2').value;
+  if(!p1||!p2||p1===p2) return tg.showAlert("Choisis deux participantes différentes");
+  if(!data.ligues[li].matchs) data.ligues[li].matchs=[];
+  data.ligues[li].matchs.push({title,p1,p2,createdAt:Date.now(),votesP1:0,votesP2:0,finished:false});
+  save(); updateMatchSelects(); render();
+  tg.showPopup({title:"Match créé",message:`${p1} vs ${p2}`,buttons:[{type:"ok"}]});
+}
+
+function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
+
+function render(){
+  processFinishedMatches();
+  const content=document.getElementById('content');
+  content.innerHTML='';
+  data.ligues.forEach((ligue,index)=>{
+    const page=document.createElement('div');
+    page.className=`page ${index===0?'active':''}`;
+    page.id=`page-${index}`;
+    let html=`<div class="section-title">${ligue.emoji} Matchs</div>`;
+    if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
+    else{
+      ligue.matchs.forEach(m=>{
+        let p1=null,p2=null;
+        if(index===0){for(let i=1;i<data.ligues.length;i++){if(!p1)p1=data.ligues[i].participantes.find(p=>p.nom===m.p1);if(!p2)p2=data.ligues[i].participantes.find(p=>p.nom===m.p2);}}
+        else{p1=ligue.participantes.find(p=>p.nom===m.p1);p2=ligue.participantes.find(p=>p.nom===m.p2);}
+        if(!p1||!p2) return;
+        const mid=`${index}-${m.p1}-${m.p2}-${m.createdAt}`;
+        const t=getTimeLeft(m.createdAt);
+        const deja=votesFaits[mid];
+        const can=!t.expired&&!deja;
+        const show=deja||t.expired;
+        html+=`
+          <div class="duel-card">
+            <div class="match-title">${m.title||'Match'}</div>
+            <div class="time-left ${t.expired?'expired':''}">${t.text}</div>
+            <div class="duel-players">
+              <div class="player">
+                <img class="player-photo" src="${getPhoto(p1)}" onclick="openGallery(${index},'${p1.nom}')">
+                <div class="player-name clickable" onclick="openProfile(${index},'${p1.nom}')">${p1.nom}</div>
+                <div class="player-votes">${show?(m.votesP1||0)+' votes':'? votes'}</div>
+              </div>
+              <div class="vs-circle">VS</div>
+              <div class="player">
+                <img class="player-photo" src="${getPhoto(p2)}" onclick="openGallery(${index},'${p2.nom}')">
+                <div class="player-name clickable" onclick="openProfile(${index},'${p2.nom}')">${p2.nom}</div>
+                <div class="player-votes">${show?(m.votesP2||0)+' votes':'? votes'}</div>
+              </div>
+            </div>
+            <div class="vote-btns">
+              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p1.nom}','${mid}',${m.createdAt})">❤️ ${p1.nom}</button>
+              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p2.nom}','${mid}',${m.createdAt})">❤️ ${p2.nom}</button>
+            </div>
+          </div>`;
+      });
+    }
+    if(index===0){
+      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
+    }else{
+      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+      const sorted=[...ligue.participantes].sort((a,b)=>b.total-a.total||b.votes-a.votes);
+      if(!sorted.length) html+=`<div class="empty">Aucune participante</div>`;
+      else{
+        html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
+        sorted.forEach((p,i)=>{
+          const pos=i+1; const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+          html+=`<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td><td>${p.v}</td><td>${p.n}</td><td>${p.d}</td><td>${p.votes}</td><td><b>${p.total}</b></td></tr>`;
+        });
+        html+=`</tbody></table></div>`;
       }
-    }, 400);
-
-    function save() {
-      localStorage.setItem('ligueDataV8', JSON.stringify(data));
-      localStorage.setItem('votesFaitsV8', JSON.stringify(votesFaits));
-      if (db) db.ref('ligueData').set(data);
     }
+    page.innerHTML=html;
+    content.appendChild(page);
+  });
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
+    };
+  });
+}
 
-    if (db) {
-      db.ref('ligueData').on('value', snap => {
-        const val = snap.val();
-        if (val) {
-          data = val;
-          data.ligues.forEach(l => {
-            l.participantes = l.participantes || [];
-            l.matchs = l.matchs || [];
-            l.participantes.forEach(p => {
-              p.gallery = p.gallery || [];
-              p.atV = p.atV || 0; p.atN = p.atN || 0; p.atD = p.atD || 0;
-              p.atVotes = p.atVotes || 0; p.atTotal = p.atTotal || 0;
-            });
-          });
-          render();
-        }
-      });
+function voter(li,nom,mid,c){
+  if(getTimeLeft(c).expired) return tg.showAlert("Match terminé");
+  if(votesFaits[mid]) return tg.showAlert("Déjà voté");
+  const m=data.ligues[li].matchs.find(x=>x.createdAt===c);
+  if(m.p1===nom) m.votesP1=(m.votesP1||0)+1; else m.votesP2=(m.votesP2||0)+1;
+  if(li!==0){
+    for(let i=1;i<data.ligues.length;i++){
+      const p=data.ligues[i].participantes.find(x=>x.nom===nom);
+      if(p){p.votes++;p.atVotes++;break;}
     }
+  }
+  votesFaits[mid]=true; save(); render();
+  tg.showPopup({title:"Vote ❤️",message:`Tu as voté pour ${nom}`,buttons:[{type:"ok"}]});
+}
 
-    // Présence réelle
-    function setupPresence() {
-      if (!db) return;
-      const user = tg.initDataUnsafe?.user;
-      if (!user?.id) return;
-
-      const ref = db.ref('online/' + user.id);
-      const setOnline = () => ref.set({ lastSeen: firebase.database.ServerValue.TIMESTAMP });
-      setOnline();
-      ref.onDisconnect().remove();
-      setInterval(setOnline, 25000);
-
-      db.ref('online').on('value', s => {
-        document.getElementById('onlineBadge').textContent = `👥 ${s.numChildren()}`;
-      });
-    }
-    setupPresence();
-
-    function contactAdmin() {
-      tg.openTelegramLink('https://t.me/LDIAdmin');
-    }
-
-    function resetCache() {
-      if (!confirm("⚠️ FIN DE SAISON ?\nLes stats passent dans All-Time et les matchs sont effacés.")) return;
-      data.ligues.forEach((l, i) => {
-        if (i === 0) { l.matchs = []; return; }
-        l.participantes.forEach(p => {
-          p.atV += p.v; p.atN += p.n; p.atD += p.d;
-          p.atVotes += p.votes; p.atTotal += p.total;
-          p.v = p.n = p.d = p.votes = p.total = 0;
-        });
-        l.matchs = [];
-      });
-      votesFaits = {};
-      save(); render();
-      tg.showPopup({ title: "Nouvelle saison", message: "OK", buttons: [{type:"ok"}] });
-    }
-
-    function resetAllTime() {
-      if (!confirm("Remettre All-Time à zéro ?")) return;
-      data.ligues.forEach((l, i) => {
-        if (i === 0) return;
-        l.participantes.forEach(p => {
-          p.atV = p.atN = p.atD = p.atVotes = p.atTotal = 0;
-        });
-      });
-      save(); openAllTimeModal();
-    }
-
-    function getPhoto(p) {
-      return (p.photo && p.photo.startsWith('http')) ? p.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`;
-    }
-
-    function getTimeLeft(createdAt) {
-      const remaining = (createdAt + DUREE_MATCH) - Date.now();
-      if (remaining <= 0) return { text: "Match terminé", expired: true };
-      const h = Math.floor(remaining / 3600000);
-      const m = Math.floor((remaining % 3600000) / 60000);
-      return { text: `Il reste ${h}h ${m}min`, expired: false };
-    }
-
-    function processFinishedMatches() {
-      let changed = false;
-      data.ligues.forEach((ligue, idx) => {
-        (ligue.matchs || []).forEach(m => {
-          if (m.finished || Date.now() < m.createdAt + DUREE_MATCH) return;
-          m.finished = true;
-          changed = true;
-          if (idx === 0) return;
-
-          const p1 = ligue.participantes.find(p => p.nom === m.p1);
-          const p2 = ligue.participantes.find(p => p.nom === m.p2);
-          if (!p1 || !p2) return;
-          const v1 = m.votesP1 || 0, v2 = m.votesP2 || 0;
-          if (v1 > v2) { p1.v++; p1.total += 3; p2.d++; p1.atV++; p1.atTotal += 3; p2.atD++; }
-          else if (v2 > v1) { p2.v++; p2.total += 3; p1.d++; p2.atV++; p2.atTotal += 3; p1.atD++; }
-          else { p1.n++; p2.n++; p1.total++; p2.total++; p1.atN++; p2.atN++; p1.atTotal++; p2.atTotal++; }
-        });
-      });
-      if (changed) save();
-    }
-
-    function openMatchModal() { updateMatchSelects(); document.getElementById('matchModal').classList.add('show'); }
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-
-    // ===== MODIFIER PARTICIPANTE =====
-    function openEditModal() {
-      const select = document.getElementById('editSelect');
-      select.innerHTML = '<option value="">-- Choisir --</option>';
-      data.ligues.forEach((l, li) => {
-        if (li === 0) return;
-        l.participantes.forEach((p, pi) => {
-          select.innerHTML += `<option value="${li}|${pi}">${p.nom} (${l.nom})</option>`;
-        });
-      });
-      document.getElementById('editName').value = '';
-      document.getElementById('editPhoto').value = '';
-      document.getElementById('editGallery').value = '';
-      document.getElementById('editModal').classList.add('show');
-    }
-
-    function loadParticipantToEdit() {
-      const val = document.getElementById('editSelect').value;
-      if (!val) return;
-      const [li, pi] = val.split('|').map(Number);
-      const p = data.ligues[li].participantes[pi];
-      document.getElementById('editName').value = p.nom || '';
-      document.getElementById('editPhoto').value = p.photo || '';
-      document.getElementById('editGallery').value = (p.gallery || []).join('\n');
-    }
-
-    function saveParticipantEdit() {
-      const val = document.getElementById('editSelect').value;
-      if (!val) return tg.showAlert("Choisis une participante");
-      const [li, pi] = val.split('|').map(Number);
-      const p = data.ligues[li].participantes[pi];
-      const newName = document.getElementById('editName').value.trim();
-      const newPhoto = document.getElementById('editPhoto').value.trim();
-      const galleryText = document.getElementById('editGallery').value.trim();
-
-      if (!newName) return tg.showAlert("Le nom est obligatoire");
-
-      const oldName = p.nom;
-      if (oldName !== newName) {
-        data.ligues.forEach(l => {
-          (l.matchs || []).forEach(m => {
-            if (m.p1 === oldName) m.p1 = newName;
-            if (m.p2 === oldName) m.p2 = newName;
-          });
-        });
-      }
-
-      p.nom = newName;
-      p.photo = newPhoto;
-      p.gallery = galleryText ? galleryText.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')) : [];
-
-      save(); closeModals(); render();
-      tg.showPopup({ title: "Enregistré ✅", message: `${newName} mise à jour`, buttons: [{type:"ok"}] });
-    }
-
-    function openGallery(lIndex, nom) {
-      let player = null;
-      if (lIndex === 0) {
-        for (let i = 1; i < data.ligues.length; i++) {
-          player = data.ligues[i].participantes.find(p => p.nom === nom);
-          if (player) break;
-        }
-      } else {
-        player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
-      }
-      if (!player) return;
-
-      document.getElementById('galleryTitle').textContent = `📸 ${player.nom}`;
-      document.getElementById('galleryMainPhoto').src = getPhoto(player);
-      const grid = document.getElementById('galleryGrid');
-      const empty = document.getElementById('galleryEmpty');
-      grid.innerHTML = '';
-      const gallery = player.gallery || [];
-      if (gallery.length === 0) {
-        empty.style.display = 'block';
-        grid.style.display = 'none';
-      } else {
-        empty.style.display = 'none';
-        grid.style.display = 'grid';
-        gallery.forEach(url => {
-          if (url.startsWith('http')) grid.innerHTML += `<img src="${url}" loading="lazy">`;
-        });
-      }
-      document.getElementById('galleryModal').classList.add('show');
-    }
-
-    function openProfile(lIndex, nom) {
-      let player = null, realL = lIndex;
-      if (lIndex === 0) {
-        for (let i = 1; i < data.ligues.length; i++) {
-          player = data.ligues[i].participantes.find(p => p.nom === nom);
-          if (player) { realL = i; break; }
-        }
-      } else player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
-      if (!player) return;
-
-      document.getElementById('profileTitle').textContent = `👤 ${player.nom}`;
-      document.getElementById('profilePhoto').src = getPhoto(player);
-      document.getElementById('profileStats').innerHTML = `
-        <div><strong>Saison en cours</strong></div>
-        <div>V: ${player.v} | N: ${player.n} | D: ${player.d}</div>
-        <div>Votes: ${player.votes} | Points: <b>${player.total}</b></div>
-        <div style="margin-top:8px;font-size:12px;color:#aaa">All-Time: ${player.atTotal} pts</div>
-      `;
-
-      const div = document.getElementById('profileMatches');
-      div.innerHTML = '';
-      const matches = (data.ligues[realL].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
-      if (!matches.length) div.innerHTML = '<div class="empty">Aucun match</div>';
-      else {
-        matches.sort((a,b) => b.createdAt - a.createdAt).forEach(m => {
-          const opp = m.p1 === nom ? m.p2 : m.p1;
-          const t = getTimeLeft(m.createdAt);
-          let res = t.text;
-          if (m.finished) {
-            const v1 = m.votesP1||0, v2 = m.votesP2||0;
-            const my = m.p1 === nom ? v1 : v2;
-            const op = m.p1 === nom ? v2 : v1;
-            res = my > op ? `Victoire (${my}-${op})` : my < op ? `Défaite (${my}-${op})` : `Nul (${my}-${op})`;
-          }
-          div.innerHTML += `<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Match'} vs ${opp}</div><div style="font-size:12px;color:#aaa">${res}</div></div></div>`;
-        });
-      }
-      document.getElementById('profileModal').classList.add('show');
-    }
-
-    function openAllTimeModal() {
-      let all = [];
-      data.ligues.forEach((l, i) => {
-        if (i === 0) return;
-        l.participantes.forEach(p => all.push({ ...p, league: l.nom, emoji: l.emoji }));
-      });
-      all.sort((a,b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
-
-      let html = all.length === 0 ? '<div class="empty">Aucune donnée</div>' : `
-        <div class="table-wrapper"><table><thead><tr>
-          <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>Ligue</th>
-          <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-        </tr></thead><tbody>
-        ${all.map((p,i) => {
-          const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-          return `<tr><td class="pos">${medal}</td><td class="name-cell">${p.nom}</td>
-            <td style="font-size:12px">${p.emoji} ${p.league}</td>
-            <td>${p.atV}</td><td>${p.atN}</td><td>${p.atD}</td>
-            <td>${p.atVotes}</td><td><b>${p.atTotal}</b></td></tr>`;
-        }).join('')}
-        </tbody></table></div>`;
-
-      document.getElementById('alltimeContent').innerHTML = html;
-      document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
-      document.getElementById('alltimeModal').classList.add('show');
-    }
-
-    function updateMatchSelects() {
-      const lIndex = +document.getElementById('matchLeague').value;
-      const p1 = document.getElementById('matchP1');
-      const p2 = document.getElementById('matchP2');
-      p1.innerHTML = p2.innerHTML = '';
-      if (lIndex === 0) {
-        data.ligues.forEach((l, i) => {
-          if (i === 0) return;
-          l.participantes.forEach(p => {
-            p1.innerHTML += `<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
-            p2.innerHTML += `<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
-          });
-        });
-      } else {
-        data.ligues[lIndex].participantes.forEach(p => {
-          p1.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-          p2.innerHTML += `<option value="${p.nom}">${p.nom}</option>`;
-        });
-      }
-      const list = document.getElementById('currentMatchesList');
-      list.innerHTML = '';
-      (data.ligues[lIndex].matchs || []).forEach((m, i) => {
-        const t = getTimeLeft(m.createdAt);
-        list.innerHTML += `<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Sans titre'}</div><div>${m.p1} vs ${m.p2}</div><div style="font-size:12px;color:${t.expired?'#e74c3c':'#aaa'}">${t.text}</div></div><button onclick="supprimerMatch(${lIndex},${i})">Suppr</button></div>`;
-      });
-    }
-
-    function ajouterMatch() {
-      const lIndex = +document.getElementById('matchLeague').value;
-      const title = document.getElementById('matchTitle').value.trim() || "Match";
-      const p1 = document.getElementById('matchP1').value;
-      const p2 = document.getElementById('matchP2').value;
-      if (!p1 || !p2 || p1 === p2) return tg.showAlert("Choisis deux participantes différentes");
-      if (!data.ligues[lIndex].matchs) data.ligues[lIndex].matchs = [];
-      data.ligues[lIndex].matchs.push({ title, p1, p2, createdAt: Date.now(), votesP1: 0, votesP2: 0, finished: false });
-      save(); updateMatchSelects(); render();
-      tg.showPopup({ title: "Match créé", message: `${p1} vs ${p2}`, buttons: [{type:"ok"}] });
-    }
-
-    function supprimerMatch(l, i) {
-      data.ligues[l].matchs.splice(i, 1);
-      save(); updateMatchSelects(); render();
-    }
-
-    function render() {
-      processFinishedMatches();
-      const content = document.getElementById('content');
-      content.innerHTML = '';
-
-      data.ligues.forEach((ligue, index) => {
-        const page = document.createElement('div');
-        page.className = `page ${index === 0 ? 'active' : ''}`;
-        page.id = `page-${index}`;
-
-        let html = `<div class="section-title">${ligue.emoji} Matchs</div>`;
-        if (!ligue.matchs?.length) {
-          html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
-        } else {
-          ligue.matchs.forEach(m => {
-            let p1 = null, p2 = null;
-            if (index === 0) {
-              for (let i = 1; i < data.ligues.length; i++) {
-                if (!p1) p1 = data.ligues[i].participantes.find(p => p.nom === m.p1);
-                if (!p2) p2 = data.ligues[i].participantes.find(p => p.nom === m.p2);
-              }
-            } else {
-              p1 = ligue.participantes.find(p => p.nom === m.p1);
-              p2 = ligue.participantes.find(p => p.nom === m.p2);
-            }
-            if (!p1 || !p2) return;
-
-            const mid = `${index}-${m.p1}-${m.p2}-${m.createdAt}`;
-            const t = getTimeLeft(m.createdAt);
-            const deja = votesFaits[mid];
-            const canVote = !t.expired && !deja;
-            const show = deja || t.expired;
-
-            html += `
-              <div class="duel-card">
-                <div class="match-title">${m.title || 'Match'}</div>
-                <div class="time-left ${t.expired ? 'expired' : ''}">${t.text}</div>
-                <div class="duel-players">
-                  <div class="player">
-                    <img class="player-photo" src="${getPhoto(p1)}" onclick="openGallery(${index},'${p1.nom}')">
-                    <div class="player-name clickable" onclick="openProfile(${index},'${p1.nom}')">${p1.nom}</div>
-                    <div class="player-votes">${show ? (m.votesP1||0)+' votes' : '? votes'}</div>
-                  </div>
-                  <div class="vs-circle">VS</div>
-                  <div class="player">
-                    <img class="player-photo" src="${getPhoto(p2)}" onclick="openGallery(${index},'${p2.nom}')">
-                    <div class="player-name clickable" onclick="openProfile(${index},'${p2.nom}')">${p2.nom}</div>
-                    <div class="player-votes">${show ? (m.votesP2||0)+' votes' : '? votes'}</div>
-                  </div>
-                </div>
-                <div class="vote-btns">
-                  <button class="vote-btn" ${!canVote?'disabled':''} onclick="voter(${index},'${p1.nom}','${mid}',${m.createdAt})">❤️ ${p1.nom}</button>
-                  <button class="vote-btn" ${!canVote?'disabled':''} onclick="voter(${index},'${p2.nom}','${mid}',${m.createdAt})">❤️ ${p2.nom}</button>
-                </div>
-              </div>`;
-          });
-        }
-
-        if (index === 0) {
-          html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>
-                   <div class="empty">Pas de classement en Pré-saison</div>`;
-        } else {
-          html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-          const sorted = [...ligue.participantes].sort((a,b) => b.total - a.total || b.votes - a.votes);
-          if (!sorted.length) html += `<div class="empty">Aucune participante</div>`;
-          else {
-            html += `<div class="table-wrapper"><table><thead><tr>
-              <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th>
-              <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-            </tr></thead><tbody>`;
-            sorted.forEach((p, i) => {
-              const pos = i + 1;
-              const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-              html += `<tr><td class="pos">${medal}</td><td class="name-cell">${p.nom}</td>
-                <td>${p.v}</td><td>${p.n}</td><td>${p.d}</td><td>${p.votes}</td><td><b>${p.total}</b></td></tr>`;
-            });
-            html += `</tbody></table></div>`;
-          }
-        }
-
-        page.innerHTML = html;
-        content.appendChild(page);
-      });
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-          btn.classList.add('active');
-          document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
-        };
-      });
-    }
-
-    function voter(lIndex, nom, matchId, createdAt) {
-      if (getTimeLeft(createdAt).expired) return tg.showAlert("Match terminé");
-      if (votesFaits[matchId]) return tg.showAlert("Tu as déjà voté");
-
-      const match = data.ligues[lIndex].matchs.find(m => m.createdAt === createdAt);
-      if (match.p1 === nom) match.votesP1 = (match.votesP1||0) + 1;
-      else match.votesP2 = (match.votesP2||0) + 1;
-
-      if (lIndex !== 0) {
-        for (let i = 1; i < data.ligues.length; i++) {
-          const p = data.ligues[i].participantes.find(x => x.nom === nom);
-          if (p) { p.votes++; p.atVotes++; break; }
-        }
-      }
-
-      votesFaits[matchId] = true;
-      save(); render();
-      tg.showPopup({ title: "Vote enregistré ❤️", message: `Tu as voté pour ${nom}`, buttons: [{type:"ok"}] });
-    }
-
-    setInterval(render, 30000);
-    render();
-  </script>
+setInterval(render,30000);
+render();
+</script>
 </body>
 </html>
