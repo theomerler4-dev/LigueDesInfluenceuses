@@ -89,7 +89,10 @@
 
   <div class="public-buttons">
     <button class="admin-btn btn-alltime" onclick="openAllTimeModal()">🏆</button>
-    <button class="admin-btn" style="background:#9b59b6" onclick="openChatModal()">💬</button>
+    <button class="admin-btn" style="background:#9b59b6; position:relative;" onclick="openChatModal()">
+  💬
+  <span id="chatBadge" style="display:none; position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px;"></span>
+</button>
   </div>
 
   <div class="admin-buttons" id="adminButtons">
@@ -465,6 +468,40 @@ setupPresence();
 
 function contactAdmin(){ tg.openTelegramLink('https://t.me/LDIAdmin'); }
 
+// ====================== NOTIFICATIONS CHAT ======================
+let lastSeenChat = Number(localStorage.getItem('lastSeenChat') || 0);
+let totalChatMessages = 0;
+
+function updateChatBadge() {
+  if (!db) return;
+  
+  db.ref('chat').once('value', snap => {
+    totalChatMessages = snap.numChildren();
+    const unread = Math.max(0, totalChatMessages - lastSeenChat);
+    const badge = document.getElementById('chatBadge');
+    
+    if (unread > 0) {
+      badge.style.display = 'flex';
+      badge.textContent = unread > 99 ? '99+' : unread;
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+
+// On met à jour le badge régulièrement
+setInterval(updateChatBadge, 15000);
+updateChatBadge();
+
+// Quand on ouvre le chat, on marque comme lu
+const originalOpenChatModal = openChatModal;
+openChatModal = function() {
+  originalOpenChatModal();
+  lastSeenChat = totalChatMessages;
+  localStorage.setItem('lastSeenChat', lastSeenChat);
+  document.getElementById('chatBadge').style.display = 'none';
+};
+  
 function resetCache(){
   if(!confirm("⚠️ FIN DE SAISON ?\nStats → All-Time + suppression des matchs")) return;
   data.ligues.forEach((l,i)=>{
