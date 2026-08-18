@@ -838,7 +838,6 @@ function ajouterMatch(){
 
 function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
 
-let html = '';
 function render(){
   processFinishedMatches();
   const content=document.getElementById('content');
@@ -848,6 +847,7 @@ function render(){
     page.className=`page ${index===0?'active':''}`;
     page.id=`page-${index}`;
     let html = '';
+    
 // Message pour les Ligues 1 à 5
 if (index >= 1 && index <= 5) {
   html += `
@@ -870,8 +870,6 @@ if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
     </div>
   `;
 }
-
-html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
 
 html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
     if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
