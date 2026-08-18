@@ -838,17 +838,21 @@ function ajouterMatch(){
 
 function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
 
-function render(){
-  processFinishedMatches();
-  const content=document.getElementById('content');
-  content.innerHTML='';
-  data.ligues.forEach((ligue,index)=>{
-    const page=document.createElement('div');
-    page.className=`page ${index===0?'active':''}`;
-    page.id=`page-${index}`;
-    let html = '';
+let html = '';
+
+// Message pour les Ligues 1 à 5
+if (index >= 1 && index <= 5) {
+  html += `
+    <div style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
+      <strong>📢 Information</strong><br><br>
+      Début de la ligue le <strong>21/08 à 22h</strong>.<br>
+      Échauffez-vous sur les matchs de pré-saison..
+    </div>
+  `;
+}
+
 // Message spécial pour la Ligue Ascension
-if (index === 6) {
+if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
   html += `
     <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
       <strong>🚀 Ligue Ascension</strong><br><br>
@@ -858,6 +862,8 @@ if (index === 6) {
     </div>
   `;
 }
+
+html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
 
 html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
     if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
