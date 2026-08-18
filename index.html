@@ -976,6 +976,10 @@ if (index === 0) {
 
   html += `</tbody></table></div>`;
 }
+      }
+    page.innerHTML=html;
+    content.appendChild(page);
+  });
     if(index===0){
       html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
     }else{
