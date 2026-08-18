@@ -911,17 +911,111 @@ html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
     if(index===0){
       html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
     }else{
-      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-      const sorted=[...ligue.participantes].sort((a,b)=>b.total-a.total||b.votes-a.votes);
-      if(!sorted.length) html+=`<div class="empty">Aucune participante</div>`;
-      else{
-        html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
-        sorted.forEach((p,i)=>{
-          const pos=i+1; const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-          html+=`<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td><td>${p.v}</td><td>${p.n}</td><td>${p.d}</td><td>${p.votes}</td><td><b>${p.total}</b></td></tr>`;
-        });
-        html+=`</tbody></table></div>`;
+      // ====================== CLASSEMENT COLORÉ ======================
+html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+
+if (index === 0) {
+  html += `<div class="empty">Pas de classement en Pré-saison</div>`;
+} else if (ligue.participantes.length === 0) {
+  html += `<div class="empty">Aucune participante</div>`;
+} else {
+  const sorted = [...ligue.participantes].sort((a, b) => b.total - a.total || b.votes - a.votes);
+  const totalPlayers = sorted.length;
+
+  html += `<div class="table-wrapper"><table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th style="text-align:left;padding-left:12px">Joueuse</th>
+        <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  sorted.forEach((p, i) => {
+    const rank = i + 1;
+    let style = '';
+    let medal = rank;
+
+    // ========== LIGUE 1 ==========
+    if (index === 1) {
+      if (rank === 1) {
+        style = 'background:linear-gradient(90deg,#f1c40f,#f39c12);color:#000;font-weight:700;';
+        medal = '🥇';
+      } else if (rank === 2) {
+        style = 'background:linear-gradient(90deg,#bdc3c7,#95a5a6);color:#000;font-weight:700;';
+        medal = '🥈';
+      } else if (rank === 3) {
+        style = 'background:linear-gradient(90deg,#e67e22,#d35400);color:#fff;font-weight:700;';
+        medal = '🥉';
+      } else if (rank >= totalPlayers - 2) { // 3 dernières
+        style = 'background:#c0392b;color:white;font-weight:600;';
+        medal = rank + ' ⬇️';
+      } else if (rank === 17) {
+        style = 'background:#e74c3c;color:white;';
+        medal = rank + ' ⚡';
       }
+    }
+
+    // ========== LIGUE 2, 3, 4 ==========
+    else if (index >= 2 && index <= 4) {
+      if (rank <= 3) {
+        style = 'background:linear-gradient(90deg,#27ae60,#2ecc71);color:white;font-weight:700;';
+        medal = rank + ' ⬆️';
+      } else if (rank === 4) {
+        style = 'background:#2ecc71;color:white;';
+        medal = rank + ' ⚡';
+      } else if (rank >= totalPlayers - 2) { // 3 dernières
+        style = 'background:#c0392b;color:white;font-weight:600;';
+        medal = rank + ' ⬇️';
+      } else if (rank === 17) {
+        style = 'background:#e74c3c;color:white;';
+        medal = rank + ' ⚡';
+      }
+    }
+
+    // ========== LIGUE 5 ==========
+    else if (index === 5) {
+      if (rank <= 3) {
+        style = 'background:linear-gradient(90deg,#27ae60,#2ecc71);color:white;font-weight:700;';
+        medal = rank + ' ⬆️';
+      } else if (rank === 4) {
+        style = 'background:#2ecc71;color:white;';
+        medal = rank + ' ⚡';
+      } else if (rank >= totalPlayers - 4) { // 5 dernières
+        style = 'background:#c0392b;color:white;font-weight:600;';
+        medal = rank + ' ⬇️';
+      } else if (rank === 15) {
+        style = 'background:#e74c3c;color:white;';
+        medal = rank + ' ⚡';
+      }
+    }
+
+    // ========== LIGUE ASCENSION ==========
+    else if (index === 6 || ligue.nom.includes("Ascension")) {
+      if (rank <= 5) {
+        style = 'background:linear-gradient(90deg,#27ae60,#2ecc71);color:white;font-weight:700;';
+        medal = rank + ' ⬆️';
+      } else if (rank === 6) {
+        style = 'background:#2ecc71;color:white;';
+        medal = rank + ' ⚡';
+      }
+    }
+
+    html += `
+      <tr style="${style}">
+        <td class="pos">${medal}</td>
+        <td class="name-cell">${p.nom}</td>
+        <td>${p.v}</td>
+        <td>${p.n}</td>
+        <td>${p.d}</td>
+        <td>${p.votes}</td>
+        <td><b>${p.total}</b></td>
+      </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+}
     }
     page.innerHTML=html;
     content.appendChild(page);
