@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ligue des Influenceusesf</title>
+  <title>Ligue des Influenceuses</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Firebase Compat -->
@@ -417,7 +417,7 @@
   ]
 };
 
-    let data = JSON.parse(localStorage.getItem('ligueDataV7')) || defaultData;
+    let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
     let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
     let isAdmin = false;
 
@@ -492,7 +492,7 @@
     }
 
     function save() {
-      localStorage.setItem('ligueDataV7', JSON.stringify(data));
+      localStorage.setItem('ligueDataV8', JSON.stringify(data));
       localStorage.setItem('votesFaitsV7', JSON.stringify(votesFaits));
       saveToFirebase();
     }
