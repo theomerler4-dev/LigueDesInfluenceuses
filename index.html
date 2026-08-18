@@ -196,10 +196,19 @@
   </div>
 
   <!-- Modal All-Time -->
-  <div class="modal" id="alltimeModal">
-    <div class="modal-content">
-      <div class="modal-title">🏆 Classement All-Time</div>
-      <div id="alltimeContent"></div>
+<div class="modal" id="alltimeModal">
+  <div class="modal-content">
+    <div class="modal-title">🏆 Classement All-Time</div>
+
+    <!-- Barre de recherche -->
+    <div style="margin-bottom:16px;">
+      <input type="text" id="alltimeSearch" 
+             placeholder="Rechercher une participante..." 
+             oninput="searchAllTime()"
+             style="width:100%; padding:13px 14px; border-radius:14px; border:1px solid #333; background:#252525; color:white; font-size:15px;">
+    </div>
+
+    <div id="alltimeContent">
       <div class="modal-actions" style="margin-top:20px;flex-direction:column;gap:10px">
         <button id="resetAllTimeBtn" class="btn" style="background:#e74c3c;color:white;display:none" onclick="resetAllTime()">🗑️ Remettre All-Time à zéro</button>
         <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
@@ -595,26 +604,94 @@ function openProfile(li,nom){
   document.getElementById('profileModal').classList.add('show');
 }
 
-function openAllTimeModal(){
-  let all=[];
-  data.ligues.forEach((l,i)=>{if(i===0)return;l.participantes.forEach(p=>all.push({...p,league:l.nom,emoji:l.emoji}));});
-  all.sort((a,b)=>b.atTotal-a.atTotal||b.atVotes-a.atVotes);
-  let html=all.length===0?'<div class="empty">Aucune donnée</div>':`
-    <div class="table-wrapper"><table><thead><tr>
-      <th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>Ligue</th>
-      <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-    </tr></thead><tbody>
-    ${all.map((p,i)=>{
-      const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-      return `<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td>
-        <td style="font-size:12px">${p.emoji} ${p.league}</td>
-        <td>${p.atV}</td><td>${p.atN}</td><td>${p.atD}</td>
-        <td>${p.atVotes}</td><td><b>${p.atTotal}</b></td></tr>`;
-    }).join('')}
-    </tbody></table></div>`;
-  document.getElementById('alltimeContent').innerHTML=html;
-  document.getElementById('resetAllTimeBtn').style.display=isAdmin?'block':'none';
+function openAllTimeModal() {
+  let all = [];
+  data.ligues.forEach((l, i) => {
+    if (i === 0) return; // on ignore la Pré-saison
+    l.participantes.forEach(p => {
+      // ← On exclut toutes celles qui s'appellent ???
+      if (p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???")) {
+        all.push({
+          ...p,
+          league: l.nom,
+          emoji: l.emoji
+        });
+      }
+    });
+  });
+
+  // Tri par points All-Time
+  all.sort((a, b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
+
+  // On stocke la liste complète pour la recherche
+  window.allTimeList = all;
+
+  renderAllTimeTable(all);
+
+  document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
+}
+
+function renderAllTimeTable(list) {
+  let html = '';
+
+  if (list.length === 0) {
+    html = `<div class="empty">Aucune participante trouvée</div>`;
+  } else {
+    html = `
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style="text-align:left;padding-left:12px">Joueuse</th>
+              <th>Ligue</th>
+              <th>V</th>
+              <th>N</th>
+              <th>D</th>
+              <th>Votes</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((p, i) => {
+              const med = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+              return `
+                <tr>
+                  <td class="pos">${med}</td>
+                  <td class="name-cell">${p.nom}</td>
+                  <td style="font-size:12px">${p.emoji} ${p.league}</td>
+                  <td>${p.atV}</td>
+                  <td>${p.atN}</td>
+                  <td>${p.atD}</td>
+                  <td>${p.atVotes}</td>
+                  <td><b>${p.atTotal}</b></td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  document.getElementById('alltimeContent').innerHTML = html;
+}
+
+// Fonction de recherche
+function searchAllTime() {
+  const query = document.getElementById('alltimeSearch').value.trim().toLowerCase();
+  
+  if (!window.allTimeList) return;
+
+  if (query === '') {
+    renderAllTimeTable(window.allTimeList);
+    return;
+  }
+
+  const filtered = window.allTimeList.filter(p => 
+    p.nom.toLowerCase().includes(query)
+  );
+
+  renderAllTimeTable(filtered);
 }
 
 function updateMatchSelects(){
