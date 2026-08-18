@@ -70,7 +70,7 @@
 </head>
 <body>
   <div class="header">
-    <button id="dmAdminBtn" onclick="contactAdmin()">🛠️</button>
+    <button id="dmAdminBtn" onclick="contactAdmin()">🛡️</button>
     👑 Ligue des Influenceuses
     <div id="onlineBadge">👥 --</div>
   </div>
@@ -257,7 +257,6 @@ let db = null;
 try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e){}
 
 const defaultData = {
-  allTimeStats: {},   // ← NOUVEAU : stockage permanent des stats All-Time
   ligues: [
     {nom:"Pré-saison",emoji:"⏳",participantes:[],matchs:[]},
     {nom:"Ligue 1",emoji:"🏆",participantes:[
@@ -466,28 +465,27 @@ setupPresence();
 
 function contactAdmin(){ tg.openTelegramLink('https://t.me/LDIAdmin'); }
 
-function resetCache() {
-  if (!confirm("⚠️ FIN DE SAISON ?\nLes stats de la saison seront remises à zéro.\nLe classement All-Time est conservé.")) return;
-
-  data.ligues.forEach((l, i) => {
-    if (i === 0) {
-      l.matchs = [];
-      return;
-    }
-    l.participantes.forEach(p => {
-      p.v = 0;
-      p.n = 0;
-      p.d = 0;
-      p.votes = 0;
-      p.total = 0;
+function resetCache(){
+  if(!confirm("⚠️ FIN DE SAISON ?\nStats → All-Time + suppression des matchs")) return;
+  data.ligues.forEach((l,i)=>{
+    if(i===0){l.matchs=[];return;}
+    l.participantes.forEach(p=>{
+      p.atV+=p.v; p.atN+=p.n; p.atD+=p.d; p.atVotes+=p.votes; p.atTotal+=p.total;
+      p.v=p.n=p.d=p.votes=p.total=0;
     });
-    l.matchs = [];
+    l.matchs=[];
   });
+  votesFaits={}; save(); render();
+  tg.showPopup({title:"Nouvelle saison",message:"OK",buttons:[{type:"ok"}]});
+}
 
-  votesFaits = {};
-  save();
-  render();
-  tg.showPopup({ title: "Nouvelle saison", message: "Saison remise à zéro !\nAll-Time conservé.", buttons: [{ type: "ok" }] });
+function resetAllTime(){
+  if(!confirm("Remettre All-Time à zéro ?")) return;
+  data.ligues.forEach((l,i)=>{
+    if(i===0) return;
+    l.participantes.forEach(p=>{p.atV=p.atN=p.atD=p.atVotes=p.atTotal=0;});
+  });
+  save(); openAllTimeModal();
 }
 
 function getPhoto(p){ return (p.photo&&p.photo.startsWith('http'))?p.photo:`https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`; }
@@ -499,44 +497,23 @@ function getTimeLeft(c){
   return {text:`Il reste ${h}h ${m}min`,expired:false};
 }
 
-function processFinishedMatches() {
-  let changed = false;
-
-  data.ligues.forEach((l, idx) => {
-    (l.matchs || []).forEach(m => {
-      if (m.finished || Date.now() < m.createdAt + DUREE_MATCH) return;
-
-      m.finished = true;
-      changed = true;
-
-      // On ignore la Pré-saison pour les points
-      if (idx === 0) return;
-
-      const p1 = l.participantes.find(p => p.nom === m.p1);
-      const p2 = l.participantes.find(p => p.nom === m.p2);
-      if (!p1 || !p2) return;
-
-      const v1 = m.votesP1 || 0;
-      const v2 = m.votesP2 || 0;
-
-      // 1. Mise à jour des stats de la saison en cours
-      if (v1 > v2) {
-        p1.v += 1; p1.total += 3;
-        p2.d += 1;
-      } else if (v2 > v1) {
-        p2.v += 1; p2.total += 3;
-        p1.d += 1;
-      } else {
-        p1.n += 1; p2.n += 1;
-        p1.total += 1; p2.total += 1;
-      }
-
-      // 2. Mise à jour du vrai All-Time permanent (par nom)
-      updateAllTimeFromMatch(m.p1, m.p2, v1, v2);
+function processFinishedMatches(){
+  let ch=false;
+  data.ligues.forEach((l,idx)=>{
+    (l.matchs||[]).forEach(m=>{
+      if(m.finished || Date.now()<m.createdAt+DUREE_MATCH) return;
+      m.finished=true; ch=true;
+      if(idx===0) return;
+      const p1=l.participantes.find(p=>p.nom===m.p1);
+      const p2=l.participantes.find(p=>p.nom===m.p2);
+      if(!p1||!p2) return;
+      const v1=m.votesP1||0, v2=m.votesP2||0;
+      if(v1>v2){p1.v++;p1.total+=3;p2.d++;p1.atV++;p1.atTotal+=3;p2.atD++;}
+      else if(v2>v1){p2.v++;p2.total+=3;p1.d++;p2.atV++;p2.atTotal+=3;p1.atD++;}
+      else{p1.n++;p2.n++;p1.total++;p2.total++;p1.atN++;p2.atN++;p1.atTotal++;p2.atTotal++;}
     });
   });
-
-  if (changed) save();
+  if(ch) save();
 }
 
 function openMatchModal(){updateMatchSelects();document.getElementById('matchModal').classList.add('show');}
@@ -639,86 +616,39 @@ function openProfile(li,nom){
 }
 
 function openAllTimeModal() {
-  if (!data.allTimeStats) data.allTimeStats = {};
-
-  // On récupère toutes les stats All-Time enregistrées
-  let all = Object.keys(data.allTimeStats).map(nom => {
-    const stats = data.allTimeStats[nom];
-    
-    // On essaie de retrouver la ligue actuelle de la fille
-    let currentLeague = "Hors Ligue";
-    let emoji = "👤";
-    
-    for (let i = 1; i < data.ligues.length; i++) {
-      const found = data.ligues[i].participantes.find(p => p.nom === nom);
-      if (found) {
-        currentLeague = data.ligues[i].nom;
-        emoji = data.ligues[i].emoji;
-        break;
+  let all = [];
+  data.ligues.forEach((l, i) => {
+    if (i === 0) return;
+    l.participantes.forEach(p => {
+      if (p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???")) {
+        all.push({
+          ...p,
+          league: l.nom,
+          emoji: l.emoji
+        });
       }
-    }
-
-    return {
-      nom: nom,
-      league: currentLeague,
-      emoji: emoji,
-      atV: stats.atV || 0,
-      atN: stats.atN || 0,
-      atD: stats.atD || 0,
-      atVotes: stats.atVotes || 0,
-      atTotal: stats.atTotal || 0
-    };
+    });
   });
 
-  // On enlève les ???
-  all = all.filter(p => p.nom && p.nom.trim() !== "???" && !p.nom.startsWith("???"));
-
-  // Tri
+  // Tri par points All-Time
   all.sort((a, b) => b.atTotal - a.atTotal || b.atVotes - a.atVotes);
 
-  // On ajoute le vrai rang
-  all = all.map((p, index) => ({ ...p, rank: index + 1 }));
+  // On ajoute le vrai classement (rank)
+  all = all.map((p, index) => ({
+    ...p,
+    rank: index + 1
+  }));
 
   window.allTimeList = all;
+
   renderAllTimeTable(all);
 
   document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
-
+  
+  // Reset de la recherche
   const searchInput = document.getElementById('alltimeSearch');
   if (searchInput) searchInput.value = '';
-}
-
-  // ====================== ALL-TIME PERMANENT ======================
-function getAllTimeStats(nom) {
-  if (!data.allTimeStats) data.allTimeStats = {};
-  if (!data.allTimeStats[nom]) {
-    data.allTimeStats[nom] = { atV: 0, atN: 0, atD: 0, atVotes: 0, atTotal: 0 };
-  }
-  return data.allTimeStats[nom];
-}
-
-function updateAllTimeFromMatch(p1Name, p2Name, votesP1, votesP2) {
-  const s1 = getAllTimeStats(p1Name);
-  const s2 = getAllTimeStats(p2Name);
-
-  if (votesP1 > votesP2) {
-    s1.atV += 1;
-    s1.atTotal += 3;
-    s2.atD += 1;
-  } else if (votesP2 > votesP1) {
-    s2.atV += 1;
-    s2.atTotal += 3;
-    s1.atD += 1;
-  } else {
-    s1.atN += 1;
-    s2.atN += 1;
-    s1.atTotal += 1;
-    s2.atTotal += 1;
-  }
-
-  s1.atVotes += votesP1;
-  s2.atVotes += votesP2;
 }
 
 function renderAllTimeTable(list) {
@@ -838,191 +768,55 @@ function ajouterMatch(){
 
 function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
 
-function render() {
+function render(){
   processFinishedMatches();
-  const content = document.getElementById('content');
-  content.innerHTML = '';
-
-  data.ligues.forEach((ligue, index) => {
-    const page = document.createElement('div');
-    page.className = `page ${index === 0 ? 'active' : ''}`;
-    page.id = `page-${index}`;
-
-    let html = '';
-
-    // ========== MESSAGE LIGUE 1 à 5 ==========
-    if (index >= 1 && index <= 5) {
-      html += `
-        <div style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
-          <strong>📢 Information</strong><br><br>
-          Début de la ligue le <strong>21/08 à 22h</strong>.<br>
-          Échauffez-vous sur les matchs de pré-saison..
-        </div>
-      `;
-    }
-
-    // ========== MESSAGE ASCENSION ==========
-    if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
-      html += `
-        <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
-          <strong>🚀 Ligue Ascension</strong><br><br>
-          La Ligue Ascension est une ligue qui permet à de nouvelles influenceuses de rejoindre les ligues supérieures.<br><br>
-          Pour ajouter la vôtre, cliquez sur le marteau en haut à gauche et envoyez le nom à un admin.<br><br>
-          <strong>La ligue commence à la J5 des autres ligues.</strong>
-        </div>
-      `;
-    }
-
-    // ========== MATCHS ==========
-    html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
-
-    if (!ligue.matchs || ligue.matchs.length === 0) {
-      html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
-    } else {
-      ligue.matchs.forEach(m => {
-        let p1 = null, p2 = null;
-
-        if (index === 0) {
-          for (let i = 1; i < data.ligues.length; i++) {
-            if (!p1) p1 = data.ligues[i].participantes.find(p => p.nom === m.p1);
-            if (!p2) p2 = data.ligues[i].participantes.find(p => p.nom === m.p2);
-          }
-        } else {
-          p1 = ligue.participantes.find(p => p.nom === m.p1);
-          p2 = ligue.participantes.find(p => p.nom === m.p2);
-        }
-
-        if (!p1 || !p2) return;
-
-        const matchId = `${index}-${m.p1}-${m.p2}-${m.createdAt}`;
-        const time = getTimeLeft(m.createdAt);
-        const deja = votesFaits[matchId];
-        const canVote = !time.expired && !deja;
-        const showVotes = deja || time.expired;
-
-        html += `
+  const content=document.getElementById('content');
+  content.innerHTML='';
+  data.ligues.forEach((ligue,index)=>{
+    const page=document.createElement('div');
+    page.className=`page ${index===0?'active':''}`;
+    page.id=`page-${index}`;
+    let html=`<div class="section-title">${ligue.emoji} Matchs</div>`;
+    if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
+    else{
+      ligue.matchs.forEach(m=>{
+        let p1=null,p2=null;
+        if(index===0){for(let i=1;i<data.ligues.length;i++){if(!p1)p1=data.ligues[i].participantes.find(p=>p.nom===m.p1);if(!p2)p2=data.ligues[i].participantes.find(p=>p.nom===m.p2);}}
+        else{p1=ligue.participantes.find(p=>p.nom===m.p1);p2=ligue.participantes.find(p=>p.nom===m.p2);}
+        if(!p1||!p2) return;
+        const mid=`${index}-${m.p1}-${m.p2}-${m.createdAt}`;
+        const t=getTimeLeft(m.createdAt);
+        const deja=votesFaits[mid];
+        const can=!t.expired&&!deja;
+        const show=deja||t.expired;
+        html+=`
           <div class="duel-card">
-            <div class="match-title">${m.title || 'Match'}</div>
-            <div class="time-left ${time.expired ? 'expired' : ''}">${time.text}</div>
+            <div class="match-title">${m.title||'Match'}</div>
+            <div class="time-left ${t.expired?'expired':''}">${t.text}</div>
             <div class="duel-players">
               <div class="player">
                 <img class="player-photo" src="${getPhoto(p1)}" onclick="openGallery(${index},'${p1.nom}')">
                 <div class="player-name clickable" onclick="openProfile(${index},'${p1.nom}')">${p1.nom}</div>
-                <div class="player-votes">${showVotes ? (m.votesP1 || 0) + ' votes' : '? votes'}</div>
+                <div class="player-votes">${show?(m.votesP1||0)+' votes':'? votes'}</div>
               </div>
               <div class="vs-circle">VS</div>
               <div class="player">
                 <img class="player-photo" src="${getPhoto(p2)}" onclick="openGallery(${index},'${p2.nom}')">
                 <div class="player-name clickable" onclick="openProfile(${index},'${p2.nom}')">${p2.nom}</div>
-                <div class="player-votes">${showVotes ? (m.votesP2 || 0) + ' votes' : '? votes'}</div>
+                <div class="player-votes">${show?(m.votesP2||0)+' votes':'? votes'}</div>
               </div>
             </div>
             <div class="vote-btns">
-              <button class="vote-btn" ${!canVote ? 'disabled' : ''} onclick="voter(${index},'${p1.nom}','${matchId}',${m.createdAt})">❤️ ${p1.nom}</button>
-              <button class="vote-btn" ${!canVote ? 'disabled' : ''} onclick="voter(${index},'${p2.nom}','${matchId}',${m.createdAt})">❤️ ${p2.nom}</button>
+              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p1.nom}','${mid}',${m.createdAt})">❤️ ${p1.nom}</button>
+              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p2.nom}','${mid}',${m.createdAt})">❤️ ${p2.nom}</button>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
-
-    // ========== CLASSEMENT ==========
-    html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-
-    if (index === 0) {
-      html += `<div class="empty">Pas de classement en Pré-saison</div>`;
-    } else if (ligue.participantes.length === 0) {
-      html += `<div class="empty">Aucune participante</div>`;
-    } else {
-      const sorted = [...ligue.participantes].sort((a, b) => b.total - a.total || b.votes - a.votes);
-      const totalPlayers = sorted.length;
-
-      html += `<div class="table-wrapper"><table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th style="text-align:left;padding-left:12px">Joueuse</th>
-            <th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      sorted.forEach((p, i) => {
-        const rank = i + 1;
-        let nameStyle = '';
-        let medal = rank;
-
-        // Ligue 1
-        if (index === 1) {
-          if (rank === 1) { nameStyle = 'color:#f1c40f;font-weight:700;'; medal = '🥇'; }
-          else if (rank === 2) { nameStyle = 'color:#bdc3c7;font-weight:700;'; medal = '🥈'; }
-          else if (rank === 3) { nameStyle = 'color:#e67e22;font-weight:700;'; medal = '🥉'; }
-          else if (rank >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:600;'; medal = rank + ' ⬇️'; }
-          else if (rank === 17) { nameStyle = 'color:#ff6b6b;'; medal = rank + ' ⚡'; }
-        }
-        // Ligue 2, 3, 4
-        else if (index >= 2 && index <= 4) {
-          if (rank <= 3) { nameStyle = 'color:#2ecc71;font-weight:700;'; medal = rank + ' ⬆️'; }
-          else if (rank === 4) { nameStyle = 'color:#58d68d;'; medal = rank + ' ⚡'; }
-          else if (rank >= totalPlayers - 2) { nameStyle = 'color:#e74c3c;font-weight:600;'; medal = rank + ' ⬇️'; }
-          else if (rank === 17) { nameStyle = 'color:#ff6b6b;'; medal = rank + ' ⚡'; }
-        }
-        // Ligue 5
-        else if (index === 5) {
-          if (rank <= 3) { nameStyle = 'color:#2ecc71;font-weight:700;'; medal = rank + ' ⬆️'; }
-          else if (rank === 4) { nameStyle = 'color:#58d68d;'; medal = rank + ' ⚡'; }
-          else if (rank >= totalPlayers - 4) { nameStyle = 'color:#e74c3c;font-weight:600;'; medal = rank + ' ⬇️'; }
-          else if (rank === 15) { nameStyle = 'color:#ff6b6b;'; medal = rank + ' ⚡'; }
-        }
-        // Ascension
-        else if (index === 6 || ligue.nom.includes("Ascension")) {
-          if (rank <= 5) { nameStyle = 'color:#2ecc71;font-weight:700;'; medal = rank + ' ⬆️'; }
-          else if (rank === 6) { nameStyle = 'color:#58d68d;'; medal = rank + ' ⚡'; }
-        }
-
-        html += `
-          <tr>
-            <td class="pos">${medal}</td>
-            <td class="name-cell" style="${nameStyle}">${p.nom}</td>
-            <td>${p.v}</td>
-            <td>${p.n}</td>
-            <td>${p.d}</td>
-            <td>${p.votes}</td>
-            <td><b>${p.total}</b></td>
-          </tr>`;
-      });
-
-      html += `</tbody></table></div>`;
-    }
-
-    page.innerHTML = html;
-    content.appendChild(page);
-  });
-
-  // Navigation
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
-    };
-  });
-}
-
-// Message spécial pour la Ligue Ascension
-if (ligue.nom === "Ascension" || ligue.nom === "Ligue Ascension") {
-  html += `
-    <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.55; color: white;">
-      <strong>🚀 Ligue Ascension</strong><br><br>
-      La Ligue Ascension est une ligue qui permet à de nouvelles influenceuses de rejoindre les ligues supérieures.<br><br>
-      Pour ajouter la vôtre, cliquez sur le marteau en haut à gauche et envoyez le nom à un admin.<br><br>
-      <strong>La ligue commence à la J5 des autres ligues.</strong>
-    </div>
-  `;
-}
-
-html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+    if(index===0){
+      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
+    }else{
+      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
       const sorted=[...ligue.participantes].sort((a,b)=>b.total-a.total||b.votes-a.votes);
       if(!sorted.length) html+=`<div class="empty">Aucune participante</div>`;
       else{
@@ -1033,13 +827,20 @@ html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`
         });
         html+=`</tbody></table></div>`;
       }
+    }
     page.innerHTML=html;
     content.appendChild(page);
   });
-    if(index===0){
-      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
-    }else{
-      
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
+    };
+  });
+}
+
 function voter(li,nom,mid,c){
   if(getTimeLeft(c).expired) return tg.showAlert("Match terminé");
   if(votesFaits[mid]) return tg.showAlert("Déjà voté");
