@@ -150,7 +150,7 @@
 
   <div class="admin-buttons" id="adminButtons">
     <button class="admin-btn btn-reset" onclick="resetCache()" title="Fin de saison / Nouvelle saison">🔄</button>
-    <button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
+ dual-button class="admin-btn btn-match" onclick="openMatchModal()">⚔️</button>
   </div>
 
   <!-- Modal Match -->
@@ -253,13 +253,11 @@
 
     const defaultData = {
   ligues: [
-    // 0 - Pré-saison
     {
       nom: "Pré-saison", emoji: "⏳",
       participantes: [],
       matchs: []
     },
-    // 1 - Ligue 1
     {
       nom: "Ligue 1", emoji: "🏆",
       participantes: [
@@ -286,7 +284,6 @@
       ],
       matchs: []
     },
-    // 2 - Ligue 2
     {
       nom: "Ligue 2", emoji: "🥈",
       participantes: [
@@ -313,7 +310,6 @@
       ],
       matchs: []
     },
-    // 3 - Ligue 3
     {
       nom: "Ligue 3", emoji: "🥉",
       participantes: [
@@ -340,7 +336,6 @@
       ],
       matchs: []
     },
-    // 4 - Ligue 4
     {
       nom: "Ligue 4", emoji: "⭐",
       participantes: [
@@ -367,7 +362,6 @@
       ],
       matchs: []
     },
-    // 5 - Ligue 5
     {
       nom: "Ligue 5", emoji: "🌟",
       participantes: [
@@ -394,7 +388,6 @@
       ],
       matchs: []
     },
-    // 6 - Ascension
     {
       nom: "Ligue Ascension", emoji: "🚀",
       participantes: [
@@ -428,9 +421,8 @@
     let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV7')) || {};
     let isAdmin = false;
 
-    // Normalisation + s'assurer que Pré-saison existe
+    // Migration Pré-saison si besoin
     if (!data.ligues[0] || data.ligues[0].nom !== "Pré-saison") {
-      // migration si ancienne structure
       data.ligues.unshift({
         nom: "Pré-saison", emoji: "⏳",
         participantes: [],
@@ -474,7 +466,6 @@
         const val = snapshot.val();
         if (val) {
           data = val;
-          // migration si besoin
           if (!data.ligues[0] || data.ligues[0].nom !== "Pré-saison") {
             data.ligues.unshift({
               nom: "Pré-saison", emoji: "⏳",
@@ -506,7 +497,46 @@
       saveToFirebase();
     }
 
-    // Bouton DM Admin → t.me/LDIAdmin
+    // ========== PRÉSENCE RÉELLE (Online Count) ==========
+    function setupPresence() {
+      if (!db) return;
+
+      const user = tg.initDataUnsafe?.user;
+      if (!user || !user.id) {
+        document.getElementById('onlineBadge').textContent = `👥 --`;
+        return;
+      }
+
+      const userId = user.id;
+      const userStatusRef = db.ref('online/' + userId);
+
+      // Mettre en ligne
+      const setOnline = () => {
+        userStatusRef.set({
+          lastSeen: firebase.database.ServerValue.TIMESTAMP,
+          name: user.first_name || 'Anonyme'
+        });
+      };
+
+      setOnline();
+
+      // Se retirer automatiquement quand on ferme l'app / perd la connexion
+      userStatusRef.onDisconnect().remove();
+
+      // Heartbeat toutes les 25 secondes (au cas où)
+      setInterval(setOnline, 25000);
+
+      // Écouter le nombre de personnes en ligne
+      db.ref('online').on('value', (snapshot) => {
+        const count = snapshot.numChildren();
+        document.getElementById('onlineBadge').textContent = `👥 ${count}`;
+      });
+    }
+
+    // Lancer la présence dès que possible
+    setupPresence();
+
+    // Bouton DM Admin
     function contactAdmin() {
       tg.openTelegramLink('https://t.me/LDIAdmin');
     }
@@ -517,7 +547,6 @@
 
       data.ligues.forEach((ligue, idx) => {
         if (idx === 0) {
-          // Pré-saison : on vide juste les matchs
           ligue.matchs = [];
           return;
         }
@@ -553,7 +582,7 @@
       if (!confirm("⚠️ Remettre TOUT le classement All-Time à zéro ?\n\nCette action est irréversible.\nLes stats de la saison en cours ne sont PAS touchées.")) return;
 
       data.ligues.forEach((ligue, idx) => {
-        if (idx === 0) return; // ignorer pré-saison
+        if (idx === 0) return;
         ligue.participantes.forEach(p => {
           p.atV = 0;
           p.atN = 0;
@@ -573,13 +602,6 @@
       });
     }
 
-    function updateOnlineCount() {
-      const count = Math.floor(Math.random() * 21) + 8;
-      document.getElementById('onlineBadge').textContent = `👥 ${count}`;
-    }
-    updateOnlineCount();
-    setInterval(updateOnlineCount, 12000);
-
     function getPhoto(p) {
       return (p.photo && p.photo.startsWith('http')) ? p.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom)}&background=333&color=fff&size=400`;
     }
@@ -595,7 +617,6 @@
     function processFinishedMatches() {
       let changed = false;
       data.ligues.forEach((ligue, lIndex) => {
-        // On ignore complètement la Pré-saison pour les stats
         if (lIndex === 0) {
           (ligue.matchs || []).forEach(match => {
             if (!match.finished && Date.now() >= match.createdAt + DUREE_MATCH) {
@@ -637,7 +658,6 @@
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
 
     function openGallery(lIndex, nom) {
-      // Pour la pré-saison on cherche la joueuse dans toutes les ligues
       let player = null;
       if (lIndex === 0) {
         for (let i = 1; i < data.ligues.length; i++) {
@@ -750,7 +770,7 @@
     function openAllTimeModal() {
       let allPlayers = [];
       data.ligues.forEach((ligue, idx) => {
-        if (idx === 0) return; // on ignore la Pré-saison
+        if (idx === 0) return;
         ligue.participantes.forEach(p => {
           allPlayers.push({
             nom: p.nom,
@@ -810,7 +830,6 @@
       p1.innerHTML = p2.innerHTML = '';
 
       if (lIndex === 0) {
-        // Pré-saison → toutes les participantes de toutes les ligues
         data.ligues.forEach((ligue, idx) => {
           if (idx === 0) return;
           ligue.participantes.forEach(p => {
@@ -879,7 +898,6 @@
           html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
         } else {
           ligue.matchs.forEach(match => {
-            // On cherche les photos même en pré-saison
             let p1 = null, p2 = null;
             if (index === 0) {
               for (let i = 1; i < data.ligues.length; i++) {
@@ -925,9 +943,7 @@
           });
         }
 
-        // Classement
         if (index === 0) {
-          // Pré-saison → pas de classement
           html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
           html += `<div class="empty">Pas de classement en Pré-saison.<br>Les matchs n’impactent ni les stats ni l’All-Time.</div>`;
         } else {
@@ -949,8 +965,7 @@
               let nameClass = "name-cell";
               let extra = "";
 
-              // Ajustement des index (Pré-saison = 0 → les ligues commencent à 1)
-              const realIndex = index; // 1=Ligue1, 2=Ligue2...
+              const realIndex = index;
 
               if (([2,3,4,5].includes(realIndex) && pos <= 3) || (realIndex === 6 && pos <= 5)) {
                 nameClass += " promo"; extra = " ⬆️";
@@ -1000,9 +1015,7 @@
       if (match.p1 === nom) match.votesP1 = (match.votesP1 || 0) + 1;
       else match.votesP2 = (match.votesP2 || 0) + 1;
 
-      // En Pré-saison on n'incrémente PAS les stats
       if (lIndex !== 0) {
-        // on cherche la joueuse dans sa vraie ligue
         for (let i = 1; i < data.ligues.length; i++) {
           const player = data.ligues[i].participantes.find(p => p.nom === nom);
           if (player) {
