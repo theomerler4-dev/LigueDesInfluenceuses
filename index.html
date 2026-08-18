@@ -850,20 +850,6 @@ html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
           const pos=i+1; const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
           let nameClass = "name-cell";
             let extra = "";
-
-            if (([1,2,3,4].includes(index) && pos <= 3) || (index === 5 && pos <= 5)) {
-              nameClass += " promo"; extra = "⬆️";
-            } else if (([1,2,3].includes(index) && pos === 4) || (index === 4 && pos === 4) || (index === 5 && pos === 6)) {
-              nameClass += " promo-barrage"; extra = "⚡";
-            }
-
-            if (([0,1,2,3].includes(index) && pos > total - 3) || (index === 4 && pos > total - 5)) {
-              nameClass += " releg"; extra = "⬇️";
-            } else if (([0,1,2,3].includes(index) && pos === 17) || (index === 4 && pos === 15)) {
-              nameClass += " releg-barrage"; extra = "⚡";
-            }
-
-
           html+=`<tr><td class="pos">${med}</td><td class="name-cell">${p.nom}</td><td>${p.v}</td><td>${p.n}</td><td>${p.d}</td><td>${p.votes}</td><td><b>${p.total}</b></td></tr>`;
         });
         html+=`</tbody></table></div>`;
