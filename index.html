@@ -216,7 +216,7 @@
     </div>
   </div>
 
-  <!-- Modal Profil / Calendrier -->
+  <!-- Modal Profil -->
   <div class="modal" id="profileModal">
     <div class="modal-content">
       <div class="modal-title" id="profileTitle">Historique</div>
@@ -394,7 +394,8 @@ const defaultData = {
       {nom:"Baya",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0},
       {nom:"Cira",photo:"",gallery:[],v:0,n:0,d:0,votes:0,total:0,atV:0,atN:0,atD:0,atVotes:0,atTotal:0}
     ],matchs:[]}
-  ]
+  ],
+  archives: []
 };
 
 localStorage.removeItem('ligueDataV7');
@@ -403,6 +404,9 @@ localStorage.removeItem('votesFaitsV7');
 let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
 let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV8')) || {};
 let isAdmin = false;
+
+// S'assurer que archives existe
+if (!data.archives) data.archives = [];
 
 data.ligues.forEach(l => {
   l.participantes = l.participantes || [];
@@ -437,6 +441,7 @@ if (db) {
     const val = snap.val();
     if (val) {
       data = val;
+      if (!data.archives) data.archives = [];
       data.ligues.forEach(l => {
         l.participantes = l.participantes || [];
         l.matchs = l.matchs || [];
@@ -496,6 +501,16 @@ function resetCache(){
     l.participantes.forEach(p=>{
       p.atV+=p.v; p.atN+=p.n; p.atD+=p.d; p.atVotes+=p.votes; p.atTotal+=p.total;
       p.v=p.n=p.d=p.votes=p.total=0;
+    });
+    // On archive les matchs restants avant de les vider
+    (l.matchs || []).forEach(m => {
+      data.archives.push({
+        ...m,
+        leagueIndex: i,
+        leagueName: l.nom,
+        emoji: l.emoji,
+        archivedAt: Date.now()
+      });
     });
     l.matchs=[];
   });
@@ -587,6 +602,11 @@ function saveParticipantEdit(){
         if(m.p2===old) m.p2=newName;
       });
     });
+    // Aussi dans les archives
+    (data.archives || []).forEach(m => {
+      if (m.p1 === old) m.p1 = newName;
+      if (m.p2 === old) m.p2 = newName;
+    });
   }
   p.nom=newName;
   p.photo=newPhoto;
@@ -633,7 +653,15 @@ function openProfile(lIndex, nom) {
   const pastDiv = document.getElementById('profilePast');
   pastDiv.innerHTML = '';
 
-  const herMatches = (data.ligues[realLIndex].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
+  // Matchs actifs + archives
+  let herMatches = (data.ligues[realLIndex].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
+  
+  // Ajouter les matchs archivés de cette joueuse
+  (data.archives || []).forEach(m => {
+    if ((m.p1 === nom || m.p2 === nom) && (m.leagueIndex === realLIndex || !m.leagueIndex)) {
+      herMatches.push(m);
+    }
+  });
 
   const past = herMatches.filter(m => {
     const time = getTimeLeft(m.createdAt);
@@ -693,10 +721,15 @@ function getShortLeague(name) {
 
 function getTotalVotes() {
   let total = 0;
+  // Votes des matchs actifs
   data.ligues.forEach(l => {
     (l.matchs || []).forEach(m => {
       total += (m.votesP1 || 0) + (m.votesP2 || 0);
     });
+  });
+  // Votes des matchs archivés (pour ne pas perdre le total)
+  (data.archives || []).forEach(m => {
+    total += (m.votesP1 || 0) + (m.votesP2 || 0);
   });
   return total;
 }
@@ -796,7 +829,9 @@ function showPlayerHistory(nom) {
   container.innerHTML = '';
 
   let allMatches = [];
-  data.ligues.forEach((ligue) => {
+
+  // Matchs actifs
+  data.ligues.forEach((ligue, idx) => {
     (ligue.matchs || []).forEach(m => {
       if (m.p1 === nom || m.p2 === nom) {
         allMatches.push({
@@ -806,6 +841,17 @@ function showPlayerHistory(nom) {
         });
       }
     });
+  });
+
+  // Matchs archivés
+  (data.archives || []).forEach(m => {
+    if (m.p1 === nom || m.p2 === nom) {
+      allMatches.push({
+        ...m,
+        league: m.leagueName || 'Archivé',
+        emoji: m.emoji || '📦'
+      });
+    }
   });
 
   allMatches.sort((a, b) => b.createdAt - a.createdAt);
@@ -850,7 +896,7 @@ function showPlayerHistory(nom) {
             <div style="font-size:12px; color:#888;">${date}</div>
           </div>
           <div style="font-size:13px; color:#ccc; margin-bottom:8px;">
-            ${m.emoji} ${m.league}
+            ${m.emoji || ''} ${m.league}
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -904,7 +950,37 @@ function ajouterMatch(){
   tg.showPopup({title:"Match créé",message:`${p1} vs ${p2}`,buttons:[{type:"ok"}]});
 }
 
-function supprimerMatch(l,i){data.ligues[l].matchs.splice(i,1);save();updateMatchSelects();render();}
+// =============== CORRECTION IMPORTANTE ===============
+// Au lieu de supprimer complètement le match, on l'ARCHIVE
+// → les votes, résultats, historique et classements restent
+function supprimerMatch(l, i) {
+  const match = data.ligues[l].matchs[i];
+  if (!match) return;
+
+  // On archive le match pour ne rien perdre
+  if (!data.archives) data.archives = [];
+  data.archives.push({
+    ...match,
+    leagueIndex: l,
+    leagueName: data.ligues[l].nom,
+    emoji: data.ligues[l].emoji,
+    archivedAt: Date.now()
+  });
+
+  // On le retire seulement de la liste active
+  data.ligues[l].matchs.splice(i, 1);
+  
+  save();
+  updateMatchSelects();
+  render();
+  updateTotalVotesBadge();
+  
+  tg.showPopup({
+    title: "Match archivé",
+    message: "Le match a été retiré des matchs du jour.\nLes votes et résultats sont conservés.",
+    buttons: [{type: "ok"}]
+  });
+}
 
 function render(){
   processFinishedMatches();
