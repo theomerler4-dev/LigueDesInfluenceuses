@@ -197,7 +197,7 @@
   <div class="modal" id="alltimeModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-        <div class="modal-title" style="margin:0;">🏆 Classement All-Time</div>
+        <div class="modal-title" style="margin:0;">🏆 Classement Général</div>
         <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
       </div>
       <div style="margin-bottom:16px;">
@@ -724,7 +724,7 @@ function renderAllTimeTable(list) {
           <thead>
             <tr>
               <th>#</th>
-              <th style="text-align:left;padding-left:12px">Joueuse</th>
+              <th style="text-align:left;padding-left:12px">Influenceuses</th>
               <th>Ligue</th>
               <th>V</th>
               <th>N</th>
@@ -803,7 +803,7 @@ function showPlayerHistory(nom) {
 
       if (!m.finished) {
         resultText = 'En cours';
-        resultEmoji = '🟡';
+        resultEmoji = '⚪';
         resultColor = '#f1c40f';
       } else if (myVotes > oppVotes) {
         resultText = 'Victoire';
@@ -959,7 +959,7 @@ function render(){
       const sorted=[...ligue.participantes].sort((a,b)=>b.total-a.total||b.votes-a.votes);
       if(!sorted.length) html+=`<div class="empty">Aucune participante</div>`;
       else{
-        html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Joueuse</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
+        html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Influenceuses</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
         sorted.forEach((p,i)=>{
           const pos=i+1; 
           const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
