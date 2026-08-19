@@ -14,6 +14,7 @@
     body{background:var(--bg);color:white;height:100vh;overflow:hidden}
     .header{background:linear-gradient(135deg,#ff0066,#ff2d78);padding:14px 16px;text-align:center;font-size:18px;font-weight:700;position:sticky;top:0;z-index:100;position:relative}
     #onlineBadge{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;background:rgba(0,0,0,0.35);padding:4px 10px;border-radius:20px;font-weight:600}
+    #totalVotesHeader{position:absolute;right:90px;top:50%;transform:translateY(-50%);font-size:12px;background:rgba(0,0,0,0.35);padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
     #dmAdminBtn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.35);border:none;color:white;font-size:15px;padding:4px 10px;border-radius:20px;cursor:pointer;font-weight:600}
     .nav{display:flex;overflow-x:auto;background:#121212;border-bottom:1px solid #222;scrollbar-width:none}
     .nav::-webkit-scrollbar{display:none}
@@ -73,6 +74,7 @@
   <div class="header">
     <button id="dmAdminBtn" onclick="contactAdmin()">🛡️</button>
     👑 Ligue des Influenceuses
+    <div id="totalVotesHeader">🗳️ 0</div>
     <div id="onlineBadge">👥 --</div>
   </div>
 
@@ -198,7 +200,10 @@
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
         <div class="modal-title" style="margin:0;">🏆 Classement Général</div>
-        <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="totalVotesBadge" style="font-size:13px; background:rgba(255,45,120,0.25); color:#ff2d78; padding:5px 12px; border-radius:20px; font-weight:700; white-space:nowrap;">0 votes</div>
+          <button onclick="closeModals()" style="background:#333; border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+        </div>
       </div>
       <div style="margin-bottom:16px;">
         <input type="text" id="alltimeSearch" placeholder="Rechercher une participante..." oninput="searchAllTime()"
@@ -212,20 +217,18 @@
   </div>
 
   <!-- Modal Profil / Calendrier -->
-<div class="modal" id="profileModal">
-  <div class="modal-content">
-    <div class="modal-title" id="profileTitle">Historique</div>
-
-    <div class="section-title">📜 Matchs passés</div>
-    <div id="profilePast"></div>
-
-    <div class="modal-actions" style="margin-top:24px">
-      <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <div class="modal-title" id="profileTitle">Historique</div>
+      <div class="section-title">📜 Matchs passés</div>
+      <div id="profilePast"></div>
+      <div class="modal-actions" style="margin-top:24px">
+        <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
+      </div>
     </div>
   </div>
-</div>
 
-  <!-- Modal Historique (NOUVEAU) -->
+  <!-- Modal Historique -->
   <div class="modal" id="historyModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
@@ -443,6 +446,7 @@ if (db) {
         });
       });
       render();
+      updateTotalVotesBadge();
     }
   });
 }
@@ -496,6 +500,7 @@ function resetCache(){
     l.matchs=[];
   });
   votesFaits={}; save(); render();
+  updateTotalVotesBadge();
   tg.showPopup({title:"Nouvelle saison",message:"OK",buttons:[{type:"ok"}]});
 }
 
@@ -609,7 +614,6 @@ function openProfile(lIndex, nom) {
   let player = null;
   let realLIndex = lIndex;
 
-  // Trouver la joueuse
   if (lIndex === 0) {
     for (let i = 1; i < data.ligues.length; i++) {
       player = data.ligues[i].participantes.find(p => p.nom === nom);
@@ -631,13 +635,11 @@ function openProfile(lIndex, nom) {
 
   const herMatches = (data.ligues[realLIndex].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
 
-  // On ne garde que les matchs terminés
   const past = herMatches.filter(m => {
     const time = getTimeLeft(m.createdAt);
     return m.finished || time.expired;
   });
 
-  // Tri du plus récent au plus ancien
   past.sort((a, b) => b.createdAt - a.createdAt);
 
   if (past.length === 0) {
@@ -676,6 +678,7 @@ function openProfile(lIndex, nom) {
 
   document.getElementById('profileModal').classList.add('show');
 }
+
 function getShortLeague(name) {
   const map = {
     "Ligue 1": "L1",
@@ -686,6 +689,24 @@ function getShortLeague(name) {
     "Ligue Ascension": "LA"
   };
   return map[name] || name;
+}
+
+function getTotalVotes() {
+  let total = 0;
+  data.ligues.forEach(l => {
+    (l.matchs || []).forEach(m => {
+      total += (m.votesP1 || 0) + (m.votesP2 || 0);
+    });
+  });
+  return total;
+}
+
+function updateTotalVotesBadge() {
+  const total = getTotalVotes();
+  const badge = document.getElementById('totalVotesBadge');
+  if (badge) badge.textContent = total + ' votes';
+  const header = document.getElementById('totalVotesHeader');
+  if (header) header.textContent = '🗳️ ' + total;
 }
   
 function openAllTimeModal() {
@@ -707,6 +728,7 @@ function openAllTimeModal() {
   all = all.map((p, index) => ({ ...p, rank: index + 1 }));
   window.allTimeList = all;
   renderAllTimeTable(all);
+  updateTotalVotesBadge();
   document.getElementById('resetAllTimeBtn').style.display = isAdmin ? 'block' : 'none';
   document.getElementById('alltimeModal').classList.add('show');
   const searchInput = document.getElementById('alltimeSearch');
@@ -1016,6 +1038,7 @@ function render(){
       document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
     };
   });
+  updateTotalVotesBadge();
 }
 
 function voter(li,nom,mid,c){
@@ -1030,11 +1053,16 @@ function voter(li,nom,mid,c){
     }
   }
   votesFaits[mid]=true; save(); render();
+  updateTotalVotesBadge();
   tg.showPopup({title:"Vote ❤️",message:`Tu as voté pour ${nom}`,buttons:[{type:"ok"}]});
 }
 
-setInterval(render,30000);
+setInterval(() => {
+  render();
+  updateTotalVotesBadge();
+}, 30000);
 render();
+updateTotalVotesBadge();
 
 // ==================== CHAT ====================
 let chatListener = null;
