@@ -405,7 +405,6 @@ let data = JSON.parse(localStorage.getItem('ligueDataV8')) || defaultData;
 let votesFaits = JSON.parse(localStorage.getItem('votesFaitsV8')) || {};
 let isAdmin = false;
 
-// S'assurer que archives existe
 if (!data.archives) data.archives = [];
 
 data.ligues.forEach(l => {
@@ -452,6 +451,10 @@ if (db) {
       });
       render();
       updateTotalVotesBadge();
+      // Si le modal match est ouvert, on rafraîchit aussi la liste
+      if (document.getElementById('matchModal').classList.contains('show')) {
+        updateMatchSelects();
+      }
     }
   });
 }
@@ -473,7 +476,6 @@ setupPresence();
 
 function contactAdmin(){ tg.openTelegramLink('https://t.me/LDIAdmin'); }
 
-// ====================== NOTIFICATIONS CHAT ======================
 let lastSeenChat = Number(localStorage.getItem('lastSeenChat') || 0);
 let totalChatMessages = 0;
 
@@ -502,7 +504,6 @@ function resetCache(){
       p.atV+=p.v; p.atN+=p.n; p.atD+=p.d; p.atVotes+=p.votes; p.atTotal+=p.total;
       p.v=p.n=p.d=p.votes=p.total=0;
     });
-    // On archive les matchs restants avant de les vider
     (l.matchs || []).forEach(m => {
       data.archives.push({
         ...m,
@@ -602,7 +603,6 @@ function saveParticipantEdit(){
         if(m.p2===old) m.p2=newName;
       });
     });
-    // Aussi dans les archives
     (data.archives || []).forEach(m => {
       if (m.p1 === old) m.p1 = newName;
       if (m.p2 === old) m.p2 = newName;
@@ -653,10 +653,8 @@ function openProfile(lIndex, nom) {
   const pastDiv = document.getElementById('profilePast');
   pastDiv.innerHTML = '';
 
-  // Matchs actifs + archives
   let herMatches = (data.ligues[realLIndex].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
   
-  // Ajouter les matchs archivés de cette joueuse
   (data.archives || []).forEach(m => {
     if ((m.p1 === nom || m.p2 === nom) && (m.leagueIndex === realLIndex || !m.leagueIndex)) {
       herMatches.push(m);
@@ -721,13 +719,11 @@ function getShortLeague(name) {
 
 function getTotalVotes() {
   let total = 0;
-  // Votes des matchs actifs
   data.ligues.forEach(l => {
     (l.matchs || []).forEach(m => {
       total += (m.votesP1 || 0) + (m.votesP2 || 0);
     });
   });
-  // Votes des matchs archivés (pour ne pas perdre le total)
   (data.archives || []).forEach(m => {
     total += (m.votesP1 || 0) + (m.votesP2 || 0);
   });
@@ -830,8 +826,7 @@ function showPlayerHistory(nom) {
 
   let allMatches = [];
 
-  // Matchs actifs
-  data.ligues.forEach((ligue, idx) => {
+  data.ligues.forEach((ligue) => {
     (ligue.matchs || []).forEach(m => {
       if (m.p1 === nom || m.p2 === nom) {
         allMatches.push({
@@ -843,7 +838,6 @@ function showPlayerHistory(nom) {
     });
   });
 
-  // Matchs archivés
   (data.archives || []).forEach(m => {
     if (m.p1 === nom || m.p2 === nom) {
       allMatches.push({
@@ -916,10 +910,10 @@ function showPlayerHistory(nom) {
 }
 
 function updateMatchSelects(){
-  const li=+document.getElementById('matchLeague').value;
-  const p1=document.getElementById('matchP1'), p2=document.getElementById('matchP2');
-  p1.innerHTML=p2.innerHTML='';
-  if(li===0){
+  const li = +document.getElementById('matchLeague').value;
+  const p1 = document.getElementById('matchP1'), p2 = document.getElementById('matchP2');
+  p1.innerHTML = p2.innerHTML = '';
+  if(li === 0){
     data.ligues.forEach((l,i)=>{if(i===0)return;l.participantes.forEach(p=>{
       p1.innerHTML+=`<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
       p2.innerHTML+=`<option value="${p.nom}">${p.nom} (${l.nom})</option>`;
@@ -930,34 +924,60 @@ function updateMatchSelects(){
       p2.innerHTML+=`<option value="${p.nom}">${p.nom}</option>`;
     });
   }
-  const list=document.getElementById('currentMatchesList');
-  list.innerHTML='';
-  (data.ligues[li].matchs||[]).forEach((m,i)=>{
-    const t=getTimeLeft(m.createdAt);
-    list.innerHTML+=`<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Sans titre'}</div><div>${m.p1} vs ${m.p2}</div><div style="font-size:12px;color:${t.expired?'#e74c3c':'#aaa'}">${t.text}</div></div><button onclick="supprimerMatch(${li},${i})">Suppr</button></div>`;
+  const list = document.getElementById('currentMatchesList');
+  list.innerHTML = '';
+  (data.ligues[li].matchs || []).forEach((m) => {
+    const t = getTimeLeft(m.createdAt);
+    // On utilise createdAt (unique) au lieu de l'index → plus de bug
+    list.innerHTML += `
+      <div class="match-list-item">
+        <div>
+          <div style="font-weight:600">${m.title || 'Sans titre'}</div>
+          <div>${m.p1} vs ${m.p2}</div>
+          <div style="font-size:12px;color:${t.expired ? '#e74c3c' : '#aaa'}">${t.text}</div>
+        </div>
+        <button onclick="supprimerMatch(${li}, ${m.createdAt})">Suppr</button>
+      </div>`;
   });
 }
 
 function ajouterMatch(){
-  const li=+document.getElementById('matchLeague').value;
-  const title=document.getElementById('matchTitle').value.trim()||"Match";
-  const p1=document.getElementById('matchP1').value;
-  const p2=document.getElementById('matchP2').value;
-  if(!p1||!p2||p1===p2) return tg.showAlert("Choisis deux participantes différentes");
-  if(!data.ligues[li].matchs) data.ligues[li].matchs=[];
-  data.ligues[li].matchs.push({title,p1,p2,createdAt:Date.now(),votesP1:0,votesP2:0,finished:false});
-  save(); updateMatchSelects(); render();
+  const li = +document.getElementById('matchLeague').value;
+  const title = document.getElementById('matchTitle').value.trim() || "Match";
+  const p1 = document.getElementById('matchP1').value;
+  const p2 = document.getElementById('matchP2').value;
+  if(!p1 || !p2 || p1 === p2) return tg.showAlert("Choisis deux participantes différentes");
+  if(!data.ligues[li].matchs) data.ligues[li].matchs = [];
+  data.ligues[li].matchs.push({
+    title,
+    p1,
+    p2,
+    createdAt: Date.now(),
+    votesP1: 0,
+    votesP2: 0,
+    finished: false
+  });
+  save();
+  updateMatchSelects();
+  render();
   tg.showPopup({title:"Match créé",message:`${p1} vs ${p2}`,buttons:[{type:"ok"}]});
 }
 
-// =============== CORRECTION IMPORTANTE ===============
-// Au lieu de supprimer complètement le match, on l'ARCHIVE
-// → les votes, résultats, historique et classements restent
-function supprimerMatch(l, i) {
-  const match = data.ligues[l].matchs[i];
-  if (!match) return;
+// =============== CORRECTION DU BUG DE SUPPRESSION ===============
+// On trouve le match par son createdAt (unique) au lieu de l'index
+function supprimerMatch(l, createdAt) {
+  const matches = data.ligues[l].matchs || [];
+  const index = matches.findIndex(m => m.createdAt === createdAt);
+  
+  if (index === -1) {
+    console.log("Match déjà supprimé ou introuvable");
+    updateMatchSelects();
+    return;
+  }
 
-  // On archive le match pour ne rien perdre
+  const match = matches[index];
+
+  // Archivage pour ne rien perdre
   if (!data.archives) data.archives = [];
   data.archives.push({
     ...match,
@@ -967,8 +987,8 @@ function supprimerMatch(l, i) {
     archivedAt: Date.now()
   });
 
-  // On le retire seulement de la liste active
-  data.ligues[l].matchs.splice(i, 1);
+  // Suppression définitive de la liste active
+  matches.splice(index, 1);
   
   save();
   updateMatchSelects();
@@ -976,20 +996,20 @@ function supprimerMatch(l, i) {
   updateTotalVotesBadge();
   
   tg.showPopup({
-    title: "Match archivé",
-    message: "Le match a été retiré des matchs du jour.\nLes votes et résultats sont conservés.",
+    title: "Match archivé ✅",
+    message: "Le match a été retiré.\nVotes et résultats conservés.",
     buttons: [{type: "ok"}]
   });
 }
 
 function render(){
   processFinishedMatches();
-  const content=document.getElementById('content');
-  content.innerHTML='';
-  data.ligues.forEach((ligue,index)=>{
-    const page=document.createElement('div');
-    page.className=`page ${index===0?'active':''}`;
-    page.id=`page-${index}`;
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  data.ligues.forEach((ligue, index) => {
+    const page = document.createElement('div');
+    page.className = `page ${index === 0 ? 'active' : ''}`;
+    page.id = `page-${index}`;
     let html = '';
 
     if (index >= 1 && index <= 5) {
@@ -1014,53 +1034,61 @@ function render(){
     }
 
     html += `<div class="section-title">${ligue.emoji} Matchs</div>`;
-    if(!ligue.matchs?.length) html+=`<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
-    else{
-      ligue.matchs.forEach(m=>{
-        let p1=null,p2=null;
-        if(index===0){for(let i=1;i<data.ligues.length;i++){if(!p1)p1=data.ligues[i].participantes.find(p=>p.nom===m.p1);if(!p2)p2=data.ligues[i].participantes.find(p=>p.nom===m.p2);}}
-        else{p1=ligue.participantes.find(p=>p.nom===m.p1);p2=ligue.participantes.find(p=>p.nom===m.p2);}
-        if(!p1||!p2) return;
-        const mid=`${index}-${m.p1}-${m.p2}-${m.createdAt}`;
-        const t=getTimeLeft(m.createdAt);
-        const deja=votesFaits[mid];
-        const can=!t.expired&&!deja;
-        const show=deja||t.expired;
-        html+=`
+    if (!ligue.matchs?.length) {
+      html += `<div class="empty">Aucun match.<br>Appuie sur ⚔️ pour en créer</div>`;
+    } else {
+      ligue.matchs.forEach(m => {
+        let p1 = null, p2 = null;
+        if (index === 0) {
+          for (let i = 1; i < data.ligues.length; i++) {
+            if (!p1) p1 = data.ligues[i].participantes.find(p => p.nom === m.p1);
+            if (!p2) p2 = data.ligues[i].participantes.find(p => p.nom === m.p2);
+          }
+        } else {
+          p1 = ligue.participantes.find(p => p.nom === m.p1);
+          p2 = ligue.participantes.find(p => p.nom === m.p2);
+        }
+        if (!p1 || !p2) return;
+        const mid = `${index}-${m.p1}-${m.p2}-${m.createdAt}`;
+        const t = getTimeLeft(m.createdAt);
+        const deja = votesFaits[mid];
+        const can = !t.expired && !deja;
+        const show = deja || t.expired;
+        html += `
           <div class="duel-card">
-            <div class="match-title">${m.title||'Match'}</div>
-            <div class="time-left ${t.expired?'expired':''}">${t.text}</div>
+            <div class="match-title">${m.title || 'Match'}</div>
+            <div class="time-left ${t.expired ? 'expired' : ''}">${t.text}</div>
             <div class="duel-players">
               <div class="player">
                 <img class="player-photo" src="${getPhoto(p1)}" onclick="openGallery(${index},'${p1.nom}')">
                 <div class="player-name clickable" onclick="openProfile(${index},'${p1.nom}')">${p1.nom}</div>
-                <div class="player-votes">${show?(m.votesP1||0)+' votes':'? votes'}</div>
+                <div class="player-votes">${show ? (m.votesP1 || 0) + ' votes' : '? votes'}</div>
               </div>
               <div class="vs-circle">VS</div>
               <div class="player">
                 <img class="player-photo" src="${getPhoto(p2)}" onclick="openGallery(${index},'${p2.nom}')">
                 <div class="player-name clickable" onclick="openProfile(${index},'${p2.nom}')">${p2.nom}</div>
-                <div class="player-votes">${show?(m.votesP2||0)+' votes':'? votes'}</div>
+                <div class="player-votes">${show ? (m.votesP2 || 0) + ' votes' : '? votes'}</div>
               </div>
             </div>
             <div class="vote-btns">
-              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p1.nom}','${mid}',${m.createdAt})">❤️ ${p1.nom}</button>
-              <button class="vote-btn" ${!can?'disabled':''} onclick="voter(${index},'${p2.nom}','${mid}',${m.createdAt})">❤️ ${p2.nom}</button>
+              <button class="vote-btn" ${!can ? 'disabled' : ''} onclick="voter(${index},'${p1.nom}','${mid}',${m.createdAt})">❤️ ${p1.nom}</button>
+              <button class="vote-btn" ${!can ? 'disabled' : ''} onclick="voter(${index},'${p2.nom}','${mid}',${m.createdAt})">❤️ ${p2.nom}</button>
             </div>
           </div>`;
       });
     }
-    if(index===0){
-      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
-    }else{
-      html+=`<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
-      const sorted=[...ligue.participantes].sort((a,b)=>b.total-a.total||b.votes-a.votes);
-      if(!sorted.length) html+=`<div class="empty">Aucune participante</div>`;
-      else{
-        html+=`<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Influenceuses</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
-        sorted.forEach((p,i)=>{
-          const pos=i+1; 
-          const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+    if (index === 0) {
+      html += `<div class="section-title" style="margin-top:26px">📊 Classement</div><div class="empty">Pas de classement en Pré-saison</div>`;
+    } else {
+      html += `<div class="section-title" style="margin-top:26px">📊 Classement</div>`;
+      const sorted = [...ligue.participantes].sort((a,b) => b.total - a.total || b.votes - a.votes);
+      if (!sorted.length) html += `<div class="empty">Aucune participante</div>`;
+      else {
+        html += `<div class="table-wrapper"><table><thead><tr><th>#</th><th style="text-align:left;padding-left:12px">Influenceuses</th><th>V</th><th>N</th><th>D</th><th>Votes</th><th>Total</th></tr></thead><tbody>`;
+        sorted.forEach((p, i) => {
+          const pos = i + 1; 
+          const med = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
           
           let nameStyle = '';
           let emoji = '';
@@ -1090,7 +1118,7 @@ function render(){
             else if (pos === 6) { nameStyle = 'color:#58d68d;'; emoji = ' ⚡'; }
           }
 
-          html+=`<tr>
+          html += `<tr>
             <td class="pos">${med}</td>
             <td class="name-cell" style="${nameStyle}">${p.nom}${emoji}</td>
             <td>${p.v}</td>
@@ -1100,16 +1128,16 @@ function render(){
             <td><b>${p.total}</b></td>
           </tr>`;
         });
-        html+=`</tbody></table></div>`;
+        html += `</tbody></table></div>`;
       }
     }
-    page.innerHTML=html;
+    page.innerHTML = html;
     content.appendChild(page);
   });
-  document.querySelectorAll('.nav-btn').forEach(btn=>{
-    btn.onclick=()=>{
-      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`page-${btn.dataset.league}`).classList.add('active');
     };
@@ -1117,18 +1145,22 @@ function render(){
   updateTotalVotesBadge();
 }
 
-function voter(li,nom,mid,c){
-  if(getTimeLeft(c).expired) return tg.showAlert("Match terminé");
-  if(votesFaits[mid]) return tg.showAlert("Déjà voté");
-  const m=data.ligues[li].matchs.find(x=>x.createdAt===c);
-  if(m.p1===nom) m.votesP1=(m.votesP1||0)+1; else m.votesP2=(m.votesP2||0)+1;
-  if(li!==0){
-    for(let i=1;i<data.ligues.length;i++){
-      const p=data.ligues[i].participantes.find(x=>x.nom===nom);
-      if(p){p.votes++;p.atVotes++;break;}
+function voter(li, nom, mid, c) {
+  if (getTimeLeft(c).expired) return tg.showAlert("Match terminé");
+  if (votesFaits[mid]) return tg.showAlert("Déjà voté");
+  const m = data.ligues[li].matchs.find(x => x.createdAt === c);
+  if (!m) return;
+  if (m.p1 === nom) m.votesP1 = (m.votesP1 || 0) + 1;
+  else m.votesP2 = (m.votesP2 || 0) + 1;
+  if (li !== 0) {
+    for (let i = 1; i < data.ligues.length; i++) {
+      const p = data.ligues[i].participantes.find(x => x.nom === nom);
+      if (p) { p.votes++; p.atVotes++; break; }
     }
   }
-  votesFaits[mid]=true; save(); render();
+  votesFaits[mid] = true;
+  save();
+  render();
   updateTotalVotesBadge();
   tg.showPopup({title:"Vote ❤️",message:`Tu as voté pour ${nom}`,buttons:[{type:"ok"}]});
 }
