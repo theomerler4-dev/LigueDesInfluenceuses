@@ -214,9 +214,9 @@
   <!-- Modal Profil / Calendrier -->
 <div class="modal" id="profileModal">
   <div class="modal-content">
-    <div class="modal-title" id="profileTitle">Calendrier Saison en cours</div>
+    <div class="modal-title" id="profileTitle">Historique</div>
 
-    <div class="section-title" style="margin-top:24px">📜 Historique saison en cours</div>
+    <div class="section-title">📜 Matchs passés</div>
     <div id="profilePast"></div>
 
     <div class="modal-actions" style="margin-top:24px">
@@ -609,7 +609,7 @@ function openProfile(lIndex, nom) {
   let player = null;
   let realLIndex = lIndex;
 
-  // Trouver la joueuse (même en pré-saison)
+  // Trouver la joueuse
   if (lIndex === 0) {
     for (let i = 1; i < data.ligues.length; i++) {
       player = data.ligues[i].participantes.find(p => p.nom === nom);
@@ -624,52 +624,24 @@ function openProfile(lIndex, nom) {
 
   if (!player) return;
 
-  document.getElementById('profileTitle').textContent = `👤 ${player.nom}`;
+  document.getElementById('profileTitle').textContent = `📜 ${player.nom}`;
 
-  const upcomingDiv = document.getElementById('profileUpcoming');
   const pastDiv = document.getElementById('profilePast');
-  upcomingDiv.innerHTML = '';
   pastDiv.innerHTML = '';
 
-  const ligue = data.ligues[realLIndex];
-  const herMatches = (ligue.matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
+  const herMatches = (data.ligues[realLIndex].matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
 
-  const upcoming = [];
-  const past = [];
-
-  herMatches.forEach(m => {
+  // On ne garde que les matchs terminés
+  const past = herMatches.filter(m => {
     const time = getTimeLeft(m.createdAt);
-    if (m.finished || time.expired) {
-      past.push(m);
-    } else {
-      upcoming.push(m);
-    }
+    return m.finished || time.expired;
   });
 
-  // Trier : à venir du plus proche au plus lointain, passés du plus récent au plus ancien
-  upcoming.sort((a, b) => a.createdAt - b.createdAt);
+  // Tri du plus récent au plus ancien
   past.sort((a, b) => b.createdAt - a.createdAt);
 
-  // ===== MATCHS À VENIR =====
-  if (upcoming.length === 0) {
-    upcomingDiv.innerHTML = `<div class="empty" style="padding:20px 0">Aucun match à venir</div>`;
-  } else {
-    upcoming.forEach(m => {
-      const opponent = m.p1 === nom ? m.p2 : m.p1;
-      const time = getTimeLeft(m.createdAt);
-      upcomingDiv.innerHTML += `
-        <div class="match-list-item">
-          <div>
-            <div style="font-weight:600">${m.title || 'Match'} vs ${opponent}</div>
-            <div style="font-size:12px;color:var(--pink)">${time.text}</div>
-          </div>
-        </div>`;
-    });
-  }
-
-  // ===== MATCHS PASSÉS =====
   if (past.length === 0) {
-    pastDiv.innerHTML = `<div class="empty" style="padding:20px 0">Aucun match joué</div>`;
+    pastDiv.innerHTML = `<div class="empty" style="padding:16px 0">Aucun match joué</div>`;
   } else {
     past.forEach(m => {
       const opponent = m.p1 === nom ? m.p2 : m.p1;
@@ -679,24 +651,24 @@ function openProfile(lIndex, nom) {
       const oppVotes = m.p1 === nom ? v2 : v1;
 
       let resultText = '';
-      let resultColor = '#aaa';
+      let color = '#aaa';
 
       if (myVotes > oppVotes) {
-        resultText = `Victoire ${myVotes} - ${oppVotes}`;
-        resultColor = '#2ecc71';
+        resultText = `Victoire ${myVotes}-${oppVotes}`;
+        color = '#2ecc71';
       } else if (myVotes < oppVotes) {
-        resultText = `Défaite ${myVotes} - ${oppVotes}`;
-        resultColor = '#e74c3c';
+        resultText = `Défaite ${myVotes}-${oppVotes}`;
+        color = '#e74c3c';
       } else {
-        resultText = `Nul ${myVotes} - ${oppVotes}`;
-        resultColor = '#f1c40f';
+        resultText = `Nul ${myVotes}-${oppVotes}`;
+        color = '#f1c40f';
       }
 
       pastDiv.innerHTML += `
         <div class="match-list-item">
           <div>
             <div style="font-weight:600">${m.title || 'Match'} vs ${opponent}</div>
-            <div style="font-size:12px;color:${resultColor}">${resultText}</div>
+            <div style="font-size:12px; color:${color}">${resultText}</div>
           </div>
         </div>`;
     });
@@ -704,7 +676,6 @@ function openProfile(lIndex, nom) {
 
   document.getElementById('profileModal').classList.add('show');
 }
-
 function getShortLeague(name) {
   const map = {
     "Ligue 1": "L1",
