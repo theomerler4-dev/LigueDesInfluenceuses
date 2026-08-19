@@ -211,17 +211,22 @@
     </div>
   </div>
 
-  <!-- Modal Profil -->
-  <div class="modal" id="profileModal">
-    <div class="modal-content">
-      <div class="modal-title" id="profileTitle">Profil</div>
-      <img id="profilePhoto" class="gallery-main" src="">
-      <div id="profileStats" class="profile-stats"></div>
-      <div class="section-title">📅 Calendrier & Histoire</div>
-      <div id="profileMatches"></div>
-      <div class="modal-actions" style="margin-top:20px"><button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button></div>
+  <!-- Modal Profil / Calendrier -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+    <div class="modal-title" id="profileTitle">Calendrier</div>
+    
+    <div class="section-title">📅 Matchs à venir</div>
+    <div id="profileUpcoming"></div>
+
+    <div class="section-title" style="margin-top:24px">📜 Matchs passés</div>
+    <div id="profilePast"></div>
+
+    <div class="modal-actions" style="margin-top:24px">
+      <button class="btn btn-cancel" onclick="closeModals()" style="flex:1">Fermer</button>
     </div>
   </div>
+</div>
 
   <!-- Modal Historique (NOUVEAU) -->
   <div class="modal" id="historyModal">
@@ -603,33 +608,103 @@ function openGallery(li,nom){
   document.getElementById('galleryModal').classList.add('show');
 }
 
-function openProfile(li,nom){
-  let p=null, real=li;
-  if(li===0){for(let i=1;i<data.ligues.length;i++){p=data.ligues[i].participantes.find(x=>x.nom===nom);if(p){real=i;break;}}}
-  else p=data.ligues[li].participantes.find(x=>x.nom===nom);
-  if(!p) return;
-  document.getElementById('profileTitle').textContent=`👤 ${p.nom}`;
-  document.getElementById('profilePhoto').src=getPhoto(p);
-  document.getElementById('profileStats').innerHTML=`
-    <div><strong>Saison en cours</strong></div>
-    <div>V: ${p.v} | N: ${p.n} | D: ${p.d}</div>
-    <div>Votes: ${p.votes} | Points: <b>${p.total}</b></div>
-    <div style="margin-top:8px;font-size:12px;color:#aaa">All-Time: ${p.atTotal} pts</div>`;
-  const div=document.getElementById('profileMatches');
-  div.innerHTML='';
-  const ms=(data.ligues[real].matchs||[]).filter(m=>m.p1===nom||m.p2===nom);
-  if(!ms.length) div.innerHTML='<div class="empty">Aucun match</div>';
-  else ms.sort((a,b)=>b.createdAt-a.createdAt).forEach(m=>{
-    const opp=m.p1===nom?m.p2:m.p1;
-    const t=getTimeLeft(m.createdAt);
-    let res=t.text;
-    if(m.finished){
-      const v1=m.votesP1||0,v2=m.votesP2||0;
-      const my=m.p1===nom?v1:v2, op=m.p1===nom?v2:v1;
-      res=my>op?`Victoire (${my}-${op})`:my<op?`Défaite (${my}-${op})`:`Nul (${my}-${op})`;
+function openProfile(lIndex, nom) {
+  let player = null;
+  let realLIndex = lIndex;
+
+  // Trouver la joueuse (même en pré-saison)
+  if (lIndex === 0) {
+    for (let i = 1; i < data.ligues.length; i++) {
+      player = data.ligues[i].participantes.find(p => p.nom === nom);
+      if (player) {
+        realLIndex = i;
+        break;
+      }
     }
-    div.innerHTML+=`<div class="match-list-item"><div><div style="font-weight:600">${m.title||'Match'} vs ${opp}</div><div style="font-size:12px;color:#aaa">${res}</div></div></div>`;
+  } else {
+    player = data.ligues[lIndex].participantes.find(p => p.nom === nom);
+  }
+
+  if (!player) return;
+
+  document.getElementById('profileTitle').textContent = `📅 ${player.nom}`;
+
+  const upcomingDiv = document.getElementById('profileUpcoming');
+  const pastDiv = document.getElementById('profilePast');
+  upcomingDiv.innerHTML = '';
+  pastDiv.innerHTML = '';
+
+  const ligue = data.ligues[realLIndex];
+  const herMatches = (ligue.matchs || []).filter(m => m.p1 === nom || m.p2 === nom);
+
+  const upcoming = [];
+  const past = [];
+
+  herMatches.forEach(m => {
+    const time = getTimeLeft(m.createdAt);
+    if (m.finished || time.expired) {
+      past.push(m);
+    } else {
+      upcoming.push(m);
+    }
   });
+
+  // Trier : à venir du plus proche au plus lointain, passés du plus récent au plus ancien
+  upcoming.sort((a, b) => a.createdAt - b.createdAt);
+  past.sort((a, b) => b.createdAt - a.createdAt);
+
+  // ===== MATCHS À VENIR =====
+  if (upcoming.length === 0) {
+    upcomingDiv.innerHTML = `<div class="empty" style="padding:20px 0">Aucun match à venir</div>`;
+  } else {
+    upcoming.forEach(m => {
+      const opponent = m.p1 === nom ? m.p2 : m.p1;
+      const time = getTimeLeft(m.createdAt);
+      upcomingDiv.innerHTML += `
+        <div class="match-list-item">
+          <div>
+            <div style="font-weight:600">${m.title || 'Match'} vs ${opponent}</div>
+            <div style="font-size:12px;color:var(--pink)">${time.text}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ===== MATCHS PASSÉS =====
+  if (past.length === 0) {
+    pastDiv.innerHTML = `<div class="empty" style="padding:20px 0">Aucun match joué</div>`;
+  } else {
+    past.forEach(m => {
+      const opponent = m.p1 === nom ? m.p2 : m.p1;
+      const v1 = m.votesP1 || 0;
+      const v2 = m.votesP2 || 0;
+      const myVotes = m.p1 === nom ? v1 : v2;
+      const oppVotes = m.p1 === nom ? v2 : v1;
+
+      let resultText = '';
+      let resultColor = '#aaa';
+
+      if (myVotes > oppVotes) {
+        resultText = `Victoire ${myVotes} - ${oppVotes}`;
+        resultColor = '#2ecc71';
+      } else if (myVotes < oppVotes) {
+        resultText = `Défaite ${myVotes} - ${oppVotes}`;
+        resultColor = '#e74c3c';
+      } else {
+        resultText = `Nul ${myVotes} - ${oppVotes}`;
+        resultColor = '#f1c40f';
+      }
+
+      pastDiv.innerHTML += `
+        <div class="match-list-item">
+          <div>
+            <div style="font-weight:600">${m.title || 'Match'} vs ${opponent}</div>
+            <div style="font-size:12px;color:${resultColor}">${resultText}</div>
+          </div>
+        </div>`;
+    });
+  }
+
   document.getElementById('profileModal').classList.add('show');
 }
 
