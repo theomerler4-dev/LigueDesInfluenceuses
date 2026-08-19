@@ -633,6 +633,18 @@ function openProfile(li,nom){
   document.getElementById('profileModal').classList.add('show');
 }
 
+function getShortLeague(name) {
+  const map = {
+    "Ligue 1": "L1",
+    "Ligue 2": "L2",
+    "Ligue 3": "L3",
+    "Ligue 4": "L4",
+    "Ligue 5": "L5",
+    "Ligue Ascension": "Asc"
+  };
+  return map[name] || name;
+}
+  
 function openAllTimeModal() {
   let all = [];
   data.ligues.forEach((l, i) => {
@@ -687,7 +699,7 @@ function renderAllTimeTable(list) {
                   <td class="name-cell">
                     <span class="clickable-name" onclick="showPlayerHistory('${p.nom}')">${p.nom}</span>
                   </td>
-                  <td style="font-size:12px">${p.emoji} ${p.league}</td>
+                  <td style="font-size:12px">${p.emoji} ${getShortLeague(p.league)}</td>
                   <td>${p.atV}</td>
                   <td>${p.atN}</td>
                   <td>${p.atD}</td>
